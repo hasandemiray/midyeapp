@@ -121,9 +121,11 @@ useEffect(() => {
   return (
     <div style={{ padding: 20 }}>
 
-      <Link href="/">← Ana Sayfa</Link>
+      {/* 🔥 SADECE BURASI DEĞİŞTİ */}
+      <Link href="/" style={homeBtn}>← ANASAYFA</Link>
 
-      <h1>{id} Detay</h1>
+      {/* 🔥 SADECE BURASI DEĞİŞTİ */}
+      <div style={titleBox}>{id} Detay</div>
 
       <h2>
         <b>Güncel Boy:</b> 
@@ -214,4 +216,27 @@ const valueBox = {
   borderRadius:8,
   marginLeft:8,
   fontWeight:'bold'
+};
+
+/* 🔥 YENİ EKLENEN SADECE 2 STYLE */
+const homeBtn = {
+  background:'red',
+  color:'white',
+  padding:'10px 15px',
+  fontWeight:'bold',
+  fontSize:18,
+  borderRadius:10,
+  display:'inline-block',
+  marginBottom:10,
+  textDecoration:'none'
+};
+
+const titleBox = {
+  background:'green',
+  color:'white',
+  padding:'10px',
+  fontSize:22,
+  fontWeight:'bold',
+  borderRadius:10,
+  marginBottom:10
 };
