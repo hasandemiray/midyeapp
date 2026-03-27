@@ -133,8 +133,8 @@ useEffect(() => {
 
       <h1>{id} Detay</h1>
 
-      {/* 🔥 SADECE EKLENEN */}
-      <h3>Geçen Gün: {gecenGun} gün</h3>
+      
+      
 
       {/* İLK EKİM */}
       {ilkKayit && (
@@ -159,6 +159,7 @@ useEffect(() => {
       <h2>İlk Toplam KG: {toplamIlkKg.toFixed(2)}</h2>
 
       <h2>Toplam KG: {guncelKg.toFixed(2)}</h2>
+      <h3>Geçen Gün: {gecenGun} gün</h3>
 
       <h2>
         Artış: {(guncelKg - toplamIlkKg).toFixed(2)} kg
