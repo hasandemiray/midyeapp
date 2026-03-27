@@ -19,7 +19,6 @@ useEffect(() => {
       return
     }
 
-    // kullanıcı varsa veri çek
     const { data: recordsData, error } = await supabase
       .from('records')
       .select('*')
@@ -27,7 +26,6 @@ useEffect(() => {
     if (!error && recordsData) {
       setRecords(recordsData)
 
-      // 🔥 SADECE EKLENEN KISIM
       const hatKayitlari = recordsData.filter(r => r.line === id)
 
       if (hatKayitlari.length > 0) {
@@ -64,7 +62,6 @@ useEffect(() => {
   let toplamIlkKg = 0;
   let ilkToplamKg = 0;
 
-  // 🔥 TÜM EKİMLER
   sirali.forEach(r => {
 
     const ekimTarihi = new Date(r.tarih);
@@ -74,7 +71,6 @@ useEffect(() => {
       (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
     );
 
-    // BOY
     let buyume = 0;
 
     if (gun > 15) {
@@ -92,17 +88,14 @@ useEffect(() => {
       guncelBoy = boy;
     }
 
-    // METRE
     const halat = 56;
     const hatMetre = (r.ara || 1) * halat;
 
     metre += hatMetre;
 
-    // İLK HAL
     const ilkKg = (parseFloat(r.kg) || 0) * hatMetre;
     toplamIlkKg += ilkKg;
 
-    // BÜYÜMÜŞ HAL
     let kg = parseFloat(r.kg) || 0;
 
     if (r.cm <= 3) {
@@ -114,7 +107,6 @@ useEffect(() => {
     guncelKg += kg * hatMetre;
   });
 
-  // 🔥 İLK EKİM TOPLAM
   if (ilkKayit) {
     ilkToplamKg =
       (parseFloat(ilkKayit.kg) || 0) *
@@ -133,10 +125,40 @@ useEffect(() => {
 
       <h1>{id} Detay</h1>
 
-      
-      
+      <h2>
+        <b>Güncel Boy:</b> 
+        <span style={valueBox}>{guncelBoy.toFixed(2)} cm</span>
+      </h2>
 
-      {/* İLK EKİM */}
+      <h2>
+        <b>Toplam Metre:</b> 
+        <span style={valueBox}>{metre} m</span>
+      </h2>
+
+      <h2>
+        <b>İlk Toplam KG:</b> 
+        <span style={valueBox}>{toplamIlkKg.toFixed(2)}</span>
+      </h2>
+
+      <h2>
+        <b>Toplam KG:</b> 
+        <span style={valueBox}>{guncelKg.toFixed(2)}</span>
+      </h2>
+
+      <h3>
+        <b>Geçen Gün:</b> 
+        <span style={valueBox}>{gecenGun} gün</span>
+      </h3>
+
+      <h2>
+        <b>Artış:</b> 
+        <span style={valueBox}>
+          {(guncelKg - toplamIlkKg).toFixed(2)} kg
+        </span>
+      </h2>
+
+      <h3>{durum}</h3>
+
       {ilkKayit && (
         <div style={box}>
           <h3>İlk Ekim</h3>
@@ -151,23 +173,6 @@ useEffect(() => {
         </div>
       )}
 
-      {/* GÜNCEL */}
-      <h2>Güncel Boy: {guncelBoy.toFixed(2)} cm</h2>
-
-      <h2>Toplam Metre: {metre} m</h2>
-
-      <h2>İlk Toplam KG: {toplamIlkKg.toFixed(2)}</h2>
-
-      <h2>Toplam KG: {guncelKg.toFixed(2)}</h2>
-      <h3>Geçen Gün: {gecenGun} gün</h3>
-
-      <h2>
-        Artış: {(guncelKg - toplamIlkKg).toFixed(2)} kg
-      </h2>
-
-      <h3>{durum}</h3>
-
-      {/* 🔥 EKİM GEÇMİŞİ */}
       {sirali.length > 0 && (
         <div style={box}>
           <h3>Ekim Geçmişi</h3>
@@ -195,10 +200,18 @@ useEffect(() => {
   );
 }
 
-/* STYLE */
 const box = {
   background: '#f5f5f5',
   padding: 15,
   borderRadius: 10,
   marginTop: 10
+};
+
+const valueBox = {
+  background:'#0070f3',
+  color:'white',
+  padding:'4px 10px',
+  borderRadius:8,
+  marginLeft:8,
+  fontWeight:'bold'
 };
