@@ -8,94 +8,82 @@ export default function Hasat() {
   const router = useRouter()
 
   const [line, setLine] = useState('')
-  const [ara, setAra] = useState('')
-  const [kg, setKg] = useState('')
   const [records, setRecords] = useState([])
+  const [kg, setKg] = useState('')
   const [kalanKg, setKalanKg] = useState(0)
 
   // 🔐 login + veri çek
   useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser()
+  const checkUser = async () => {
 
-      if (!data.user) {
-        router.push('/login')
-        return
-      }
+    const { data: userData } = await supabase.auth.getUser()
 
-      const { data: rec } = await supabase
-        .from('records')
-        .select('*')
-
-      setRecords(rec || [])
+    if (!userData.user) {
+      router.push('/login')
+      return
     }
 
-    checkUser()
-  }, [])
+    const { data: recordsData } = await supabase
+      .from('records')
+      .select('*')
 
-  // 🔥 DETAY SAYFASIYLA AYNI TOPLAM KG
-  const toplamKg = (() => {
+    setRecords(recordsData || [])
+  }
 
-    const hatKayitlari = records.filter(r => r.line === line)
+  checkUser()
+}, [])
 
-    const sirali = [...hatKayitlari].sort(
-      (a, b) => new Date(a.tarih) - new Date(b.tarih)
+  // 🔥 DETAY SAYFASIYLA AYNI HESAP
+  const hatKayitlari = records.filter(r => r.line === line)
+
+  const sirali = [...hatKayitlari].sort(
+    (a, b) => new Date(a.tarih) - new Date(b.tarih)
+  )
+
+  let toplamKg = 0
+
+  sirali.forEach(r => {
+
+    const ekimTarihi = new Date(r.tarih)
+    const bugun = new Date()
+
+    const gun = Math.floor(
+      (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
     )
 
-    let guncelKg = 0
+    const halat = 56
+    const hatMetre = (r.ara || 1) * halat
 
-    sirali.forEach(r => {
+    let kgDeger = parseFloat(r.kg) || 0
 
-      const ekimTarihi = new Date(r.tarih)
-      const bugun = new Date()
+    if (r.cm <= 3) {
+      kgDeger *= (4 ** (gun / 180))
+    } else if (r.cm <= 4.5) {
+      kgDeger *= (2 ** (gun / 120))
+    }
 
-      const gun = Math.floor(
-        (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
-      )
+    toplamKg += kgDeger * hatMetre
+  })
 
-      const halat = 56
-      const hatMetre = (r.ara || 1) * halat
-
-      let kgDeger = parseFloat(r.kg) || 0
-
-      // 🔥 AYNI HESAP
-      if (r.cm <= 3) {
-        kgDeger *= (4 ** (gun / 180))
-      } else if (r.cm <= 4.5) {
-        kgDeger *= (2 ** (gun / 120))
-      }
-
-      guncelKg += kgDeger * hatMetre
-    })
-
-    return guncelKg
-
-  })()
-
-  // 🔥 CANLI KALAN HESAP
+  // 🔥 CANLI KALAN
   useEffect(() => {
-    if (line && kg !== '') {
+    if (kg !== '') {
       const kalan = toplamKg - (parseFloat(kg) || 0)
       setKalanKg(kalan)
     }
-  }, [kg, line, toplamKg])
+  }, [kg, toplamKg])
 
   // 💾 KAYDET
   const handleSave = async () => {
 
     if (!line) return alert("Hat seç")
 
-    const { error } = await supabase
-      .from('hasat')
-      .insert([{
-        line,
-        ara: parseFloat(ara) || 0,
-        kg: parseFloat(kg) || 0
-      }])
+    await supabase.from('hasat').insert([{
+      line,
+      kg: parseFloat(kg) || 0
+    }])
 
-    if (!error) {
-      alert("Hasat kaydedildi")
-    }
+    alert("Hasat kaydedildi")
   }
 
   return (
@@ -115,32 +103,29 @@ export default function Hasat() {
             return <option key={hat}>{hat}</option>
           })
         )}
-
       </select>
-
-      <br /><br />
-
-      <input
-        placeholder="Kaç Ara Hasat"
-        onChange={e=>setAra(e.target.value)}
-      />
-
-      <br /><br />
-
-      <input
-        placeholder="Satış KG"
-        onChange={e=>setKg(e.target.value)}
-      />
-
-      <br /><br />
-
-      <button onClick={handleSave}>Kaydet</button>
 
       <hr />
 
-      <h3>Toplam KG: {toplamKg.toFixed(2)}</h3>
-      <h3>Hasat Edilen: {kg || 0}</h3>
-      <h3>Kalan KG: {kalanKg.toFixed(2)}</h3>
+      {/* 🔥 DETAY GİBİ */}
+      <h2>Toplam KG: {toplamKg.toFixed(2)}</h2>
+
+      {/* 🔥 HASAT */}
+      {line && (
+        <>
+          <input
+            placeholder="Hasat KG"
+            onChange={e=>setKg(e.target.value)}
+          />
+
+          <br /><br />
+
+          <button onClick={handleSave}>Kaydet</button>
+
+          <h3>Hasat Edilen: {kg || 0}</h3>
+          <h3>Kalan KG: {kalanKg.toFixed(2)}</h3>
+        </>
+      )}
 
     </div>
   )
