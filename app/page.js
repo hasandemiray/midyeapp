@@ -101,7 +101,19 @@ export default function Page() {
         marginBottom:15
       }}>
         <b>👤 Hoşgeldin akana</b>
-
+<button
+  onClick={() => router.push('/hasat')}
+  style={{
+    background:'green',
+    color:'white',
+    padding:'10px',
+    borderRadius:10,
+    fontWeight:'bold',
+    marginBottom:10
+  }}
+>
+  HASAT
+</button>
         <button
           onClick={async () => {
             await supabase.auth.signOut()
