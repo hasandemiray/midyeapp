@@ -56,11 +56,7 @@ export default function Hasat() {
 
     let kgDeger = parseFloat(r.kg) || 0
 
-    if (r.cm <= 3) {
-      kgDeger *= (4 ** (gun / 180))
-    } else if (r.cm <= 4.5) {
-      kgDeger *= (2 ** (gun / 120))
-    }
+ kgDeger *= (2 ** (gun / 120))
 
     toplamKg += kgDeger * hatMetre
   })
