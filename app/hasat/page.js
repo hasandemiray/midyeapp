@@ -13,7 +13,7 @@ export default function Hasat() {
   const [records, setRecords] = useState([])
   const [kalanKg, setKalanKg] = useState(0)
 
-  // 🔐 login kontrol + veri çek
+  // 🔐 login + veri çek
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser()
@@ -33,15 +33,43 @@ export default function Hasat() {
     checkUser()
   }, [])
 
-  // 🔥 toplam kg hesap
+  // 🔥 DETAY SAYFASIYLA AYNI TOPLAM KG HESABI
   const toplamKg = records
     .filter(r => r.line === line)
     .reduce((sum, r) => {
+
       const halat = 56
-      return sum + ((parseFloat(r.kg)||0) * (r.ara||1) * halat)
+      const hatMetre = (r.ara || 1) * halat
+
+      const ekimTarihi = new Date(r.tarih)
+      const bugun = new Date()
+
+      const gun = Math.floor(
+        (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
+      )
+
+      let kgDeger = parseFloat(r.kg) || 0
+
+      // 🔥 büyüme hesap (detay sayfasıyla aynı)
+      if (r.cm <= 3) {
+        kgDeger *= (4 ** (gun / 180))
+      } else if (r.cm <= 4.5) {
+        kgDeger *= (2 ** (gun / 120))
+      }
+
+      return sum + (kgDeger * hatMetre)
+
     }, 0)
 
-  // 💾 kaydet
+  // 🔥 CANLI KALAN HESAP
+  useEffect(() => {
+    if (line && kg !== '') {
+      const kalan = toplamKg - (parseFloat(kg) || 0)
+      setKalanKg(kalan)
+    }
+  }, [kg, line, toplamKg])
+
+  // 💾 KAYDET
   const handleSave = async () => {
 
     if (!line) return alert("Hat seç")
@@ -55,8 +83,6 @@ export default function Hasat() {
       }])
 
     if (!error) {
-      const kalan = toplamKg - (parseFloat(kg) || 0)
-      setKalanKg(kalan)
       alert("Hasat kaydedildi")
     }
   }
