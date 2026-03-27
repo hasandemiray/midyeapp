@@ -119,7 +119,14 @@ const confirmDelete = async () => {
         </button>
       </div>
 
-      <h1>Midye Dashboard</h1>
+      <h1 style={{
+  textAlign:'center',
+  fontSize:32,
+  fontWeight:'bold',
+  marginBottom:20
+}}>
+  🦪 MİDYE TAKİP SİSTEMİ 🦪
+</h1>
 
       {/* BLOKLAR */}
       <div style={blockBar}>
