@@ -1,26 +1,19 @@
 'use client'
-import { useRouter } from 'next/navigation'
-import { supabase } from './lib/supabase'
+import { supabase } from '../lib/supabase'
 import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 
-export default function Page() {
+export default function Hasat() {
 
   const router = useRouter()
 
-  const [block, setBlock] = useState(null)
-  const [selectedLine, setSelectedLine] = useState(null)
-  const [records, setRecords] = useState([])
-
+  const [line, setLine] = useState('')
   const [ara, setAra] = useState('')
   const [kg, setKg] = useState('')
-  const [cm, setCm] = useState('')
-  const [tarih, setTarih] = useState(
-    new Date().toISOString().split('T')[0]
-  )
+  const [records, setRecords] = useState([])
+  const [kalanKg, setKalanKg] = useState(0)
 
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [lastDeleted, setLastDeleted] = useState(null)
-
+  // 🔐 login + verileri çek
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser()
@@ -29,343 +22,95 @@ export default function Page() {
         router.push('/login')
         return
       }
-    }
 
-    checkUser()
-
-    const load = async () => {
-      const { data, error } = await supabase
+      const { data: rec } = await supabase
         .from('records')
         .select('*')
 
-      if (!error && data) {
-        setRecords(data)
-      }
+      setRecords(rec || [])
     }
 
-    load()
+    checkUser()
   }, [])
 
+  // 🔥 toplam kg hesap
+  const toplamKg = records
+    .filter(r => r.line === line)
+    .reduce((sum, r) => {
+      const halat = 56
+      return sum + ((parseFloat(r.kg)||0) * (r.ara||1) * halat)
+    }, 0)
+
+  // 🔥 CANLI HESAP (EN ÖNEMLİ)
+  useEffect(() => {
+    if (line && kg !== '') {
+      const kalan = toplamKg - (parseFloat(kg) || 0)
+      setKalanKg(kalan)
+    }
+  }, [kg, line, toplamKg])
+
+  // 💾 kaydet
   const handleSave = async () => {
-    const yeni = {
-      line: selectedLine,
-      ara: parseFloat(ara) || 0,
-      kg: parseFloat(kg) || 0,
-      cm: parseFloat(cm) || 0,
-      tarih
-    }
+
+    if (!line) return alert("Hat seç")
 
     const { error } = await supabase
-      .from('records')
-      .insert([yeni])
+      .from('hasat')
+      .insert([{
+        line,
+        ara: parseFloat(ara) || 0,
+        kg: parseFloat(kg) || 0
+      }])
 
     if (!error) {
-      setRecords(prev => [...prev, yeni])
+      alert("Hasat kaydedildi")
     }
-
-    setSelectedLine(null)
-    setAra('')
-    setKg('')
-    setCm('')
-  }
-
-  const confirmDelete = async () => {
-    const { error } = await supabase
-      .from('records')
-      .delete()
-      .eq('line', deleteTarget)
-
-    if (!error) {
-      const kalan = records.filter(r => r.line !== deleteTarget)
-      setRecords(kalan)
-    }
-
-    setDeleteTarget(null)
-  }
-
-  const undoDelete = () => {
-    const updated = [...records, ...lastDeleted]
-    localStorage.setItem('records', JSON.stringify(updated))
-    setRecords(updated)
-    setLastDeleted(null)
   }
 
   return (
-    <div style={container}>
+    <div style={{ padding:20 }}>
 
-      {/* ÜST BAR */}
-      <div style={{
-        display:'flex',
-        justifyContent:'space-between',
-        alignItems:'center',
-        marginBottom:15
-      }}>
-        <b>👤 Hoşgeldin akana</b>
-<button
-  onClick={() => router.push('/hasat')}
-  style={{
-    background:'green',
-    color:'white',
-    padding:'10px',
-    borderRadius:10,
-    fontWeight:'bold',
-    marginBottom:10
-  }}
->
-  HASAT
-</button>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut()
-            router.push('/login')
-          }}
-          style={{
-            background:'#ff4d4f',
-            color:'white',
-            border:'none',
-            padding:'8px 14px',
-            borderRadius:8,
-            fontWeight:'bold'
-          }}
-        >
-          Çıkış
-        </button>
-      </div>
+      <button onClick={()=>router.push('/')}>← ANASAYFA</button>
 
-      {/* BAŞLIK */}
-      <div style={{
-        display:'flex',
-        alignItems:'center',
-        justifyContent:'center',
-        gap:12,
-        marginBottom:25
-      }}>
-        <img src="/midye.png" style={{width:50}} />
+      <h1>HASAT PANELİ</h1>
 
-        <h1 style={{
-          fontSize:30,
-          fontWeight:'bold'
-        }}>
-          MİDYE TAKİP SİSTEMİ
-        </h1>
+      {/* HAT SEÇ */}
+      <select onChange={e=>setLine(e.target.value)}>
+        <option value="">Hat seç</option>
 
-        <img src="/midye.png" style={{width:50, transform:'scaleX(-1)'}} />
-      </div>
+        {['A','B','C','D','E','F'].map(b =>
+          [...Array(15)].map((_,i)=> {
+            const hat = b + (i+1)
+            return <option key={hat}>{hat}</option>
+          })
+        )}
 
-      {/* BLOKLAR */}
-      <div style={blockBar}>
-       {['A','B','C','D','E','F'].map(b => (
-  <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
-    {b} Blok
-  </button>
-))}
-      </div>
+      </select>
 
-      {/* GRID */}
-      {block && (
-        <div style={grid}>
-          {[...Array(15)].map((_, i) => {
-            const hat = block + (i + 1)
-            const ilk = records.find(r => r.line === hat)
+      <br /><br />
 
-            let boy = 0
+      <input
+        placeholder="Kaç Ara Hasat"
+        onChange={e=>setAra(e.target.value)}
+      />
 
-            if (ilk) {
-              const gun = Math.floor(
-                (new Date() - new Date(ilk.tarih))/(1000*60*60*24)
-              )
+      <br /><br />
 
-              let buyume = 0
+      <input
+        placeholder="Satış KG"
+        onChange={e=>setKg(e.target.value)}
+      />
 
-              if (gun > 15) {
-                const ay = (gun - 15)/30
-                const ayNum = new Date().getMonth()+1
+      <br /><br />
 
-                buyume = (ayNum >= 6 && ayNum <= 11)
-                  ? ay * 0.3
-                  : ay * 0.5
-              }
+      <button onClick={handleSave}>Kaydet</button>
 
-              boy = (ilk.cm || 0) + buyume
-            }
+      <hr />
 
-            const durum =
-              boy >= 6 ? '🟢'
-              : boy >= 5 ? '🟡'
-              : '🔴'
-
-            return (
-              <div key={i} style={card} onClick={()=>setSelectedLine(hat)}>
-
-                <div>
-                  <div style={hatTitle}>{hat}</div>
-                  <div style={hatInfo}>
-                    {durum} {boy.toFixed(2)} cm
-                  </div>
-                </div>
-
-                <div style={cardButtons}>
-                  <button
-                    onClick={(e)=>{
-                      e.stopPropagation()
-                      router.push(`/hat/${hat}`)
-                    }}
-                    style={btnDetail}
-                  >
-                    Detay
-                  </button>
-
-                  <button
-                    onClick={(e)=>{
-                      e.stopPropagation()
-                      setDeleteTarget(hat)
-                    }}
-                    style={btnDelete}
-                  >
-                    🗑️
-                  </button>
-                </div>
-
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* MODAL */}
-      {selectedLine && (
-        <div style={overlay}>
-          <div style={modal}>
-
-            <h2>{selectedLine} Ekim</h2>
-
-            <input placeholder="Ara" value={ara} onChange={e=>setAra(e.target.value)} style={input}/>
-            <input placeholder="KG" value={kg} onChange={e=>setKg(e.target.value)} style={input}/>
-            <input placeholder="CM" value={cm} onChange={e=>setCm(e.target.value)} style={input}/>
-            <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} style={input}/>
-
-            <button style={btnSave} onClick={handleSave}>Kaydet</button>
-            <button style={btnClose} onClick={()=>setSelectedLine(null)}>Kapat</button>
-
-          </div>
-        </div>
-      )}
-
-      {/* DELETE */}
-      {deleteTarget && (
-        <div style={overlay}>
-          <div style={modal}>
-            <h3>{deleteTarget} silinsin mi?</h3>
-            <button onClick={confirmDelete} style={btnDelete}>Evet</button>
-            <button onClick={()=>setDeleteTarget(null)}>Vazgeç</button>
-          </div>
-        </div>
-      )}
+      <h3>Toplam KG: {toplamKg.toFixed(2)}</h3>
+      <h3>Hasat Edilen: {kg || 0}</h3>
+      <h3>Kalan KG: {kalanKg.toFixed(2)}</h3>
 
     </div>
   )
-}
-
-/* STYLES */
-const container = {
-  padding:20,
-  background:'#f0f2f5',
-  minHeight:'100vh'
-}
-
-const blockBar = {
-  display:'grid',
-  gridTemplateColumns:'repeat(3, 1fr)',
-  gap:12,
-  marginBottom:20
-}
-
-const btnBlue = {
-  background:'#0070f3',
-  color:'white',
-  border:'none',
-  padding:'18px 0',
-  borderRadius:12,
-  fontSize:20,
-  fontWeight:'bold'
-}
-
-const grid = {
-  display:'grid',
-  gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))',
-  gap:18
-}
-
-const card = {
-  background:'white',
-  padding:24,
-  borderRadius:18,
-  boxShadow:'0 8px 18px rgba(0,0,0,0.15)',
-  display:'flex',
-  flexDirection:'column',
-  gap:18,
-  cursor:'pointer'
-}
-
-const hatTitle = { fontSize:24, fontWeight:'bold' }
-const hatInfo = { fontSize:18 }
-
-const cardButtons = { display:'flex', gap:12 }
-
-const btnDetail = {
-  flex:2,
-  background:'#333',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12
-}
-
-const btnDelete = {
-  flex:1,
-  background:'red',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12
-}
-
-const overlay = {
-  position:'fixed',
-  inset:0,
-  background:'rgba(0,0,0,0.5)',
-  display:'flex',
-  justifyContent:'center',
-  alignItems:'center'
-}
-
-const modal = {
-  background:'white',
-  padding:24,
-  borderRadius:16,
-  width:320,
-  display:'flex',
-  flexDirection:'column',
-  gap:10
-}
-
-const input = {
-  padding:10,
-  borderRadius:8,
-  border:'1px solid #ccc'
-}
-
-const btnSave = {
-  background:'#0070f3',
-  color:'white',
-  padding:12,
-  border:'none',
-  borderRadius:10
-}
-
-const btnClose = {
-  background:'#ddd',
-  padding:12,
-  border:'none',
-  borderRadius:10
 }
