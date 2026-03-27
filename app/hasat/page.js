@@ -33,13 +33,18 @@ export default function Hasat() {
     checkUser()
   }, [])
 
-  // 🔥 DETAY SAYFASIYLA AYNI TOPLAM KG HESABI
-  const toplamKg = records
-    .filter(r => r.line === line)
-    .reduce((sum, r) => {
+  // 🔥 DETAY SAYFASIYLA AYNI TOPLAM KG
+  const toplamKg = (() => {
 
-      const halat = 56
-      const hatMetre = (r.ara || 1) * halat
+    const hatKayitlari = records.filter(r => r.line === line)
+
+    const sirali = [...hatKayitlari].sort(
+      (a, b) => new Date(a.tarih) - new Date(b.tarih)
+    )
+
+    let guncelKg = 0
+
+    sirali.forEach(r => {
 
       const ekimTarihi = new Date(r.tarih)
       const bugun = new Date()
@@ -48,18 +53,24 @@ export default function Hasat() {
         (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
       )
 
+      const halat = 56
+      const hatMetre = (r.ara || 1) * halat
+
       let kgDeger = parseFloat(r.kg) || 0
 
-      // 🔥 büyüme hesap (detay sayfasıyla aynı)
+      // 🔥 AYNI HESAP
       if (r.cm <= 3) {
         kgDeger *= (4 ** (gun / 180))
       } else if (r.cm <= 4.5) {
         kgDeger *= (2 ** (gun / 120))
       }
 
-      return sum + (kgDeger * hatMetre)
+      guncelKg += kgDeger * hatMetre
+    })
 
-    }, 0)
+    return guncelKg
+
+  })()
 
   // 🔥 CANLI KALAN HESAP
   useEffect(() => {
