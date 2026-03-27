@@ -10,7 +10,6 @@ export default function Login() {
   const router = useRouter()
 
   const handleLogin = async () => {
-    // 🔐 sadece bu kullanıcıya izin ver
     if (username !== 'akana') {
       alert('Kullanıcı adı hatalı')
       return
@@ -31,31 +30,38 @@ export default function Login() {
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#f0f2f5',
+      background: 'linear-gradient(135deg, #0070f3, #00c6ff)',
       display: 'flex',
       justifyContent: 'center',
       alignItems: 'center'
     }}>
+
       <div style={{
         background: 'white',
         padding: 30,
-        borderRadius: 16,
-        width: 300,
-        boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
+        borderRadius: 20,
+        width: 320,
+        boxShadow: '0 20px 40px rgba(0,0,0,0.2)',
         display: 'flex',
         flexDirection: 'column',
-        gap: 12
+        gap: 15
       }}>
 
-        <h2 style={{ textAlign: 'center' }}>🔐 Giriş Paneli</h2>
+        <h2 style={{
+          textAlign: 'center',
+          marginBottom: 10
+        }}>
+          🦪 Midye Panel
+        </h2>
 
         <input
           placeholder="Kullanıcı Adı"
           onChange={e => setUsername(e.target.value)}
           style={{
             padding: 12,
-            borderRadius: 8,
-            border: '1px solid #ccc'
+            borderRadius: 10,
+            border: '1px solid #ddd',
+            fontSize: 14
           }}
         />
 
@@ -65,8 +71,9 @@ export default function Login() {
           onChange={e => setPassword(e.target.value)}
           style={{
             padding: 12,
-            borderRadius: 8,
-            border: '1px solid #ccc'
+            borderRadius: 10,
+            border: '1px solid #ddd',
+            fontSize: 14
           }}
         />
 
@@ -74,18 +81,20 @@ export default function Login() {
           onClick={handleLogin}
           style={{
             padding: 12,
-            borderRadius: 8,
+            borderRadius: 10,
             border: 'none',
-            background: '#0070f3',
+            background: 'linear-gradient(135deg, #0070f3, #0051a3)',
             color: 'white',
             fontWeight: 'bold',
-            fontSize: 16
+            fontSize: 16,
+            cursor: 'pointer'
           }}
         >
           Giriş Yap
         </button>
 
       </div>
+
     </div>
   )
 }
