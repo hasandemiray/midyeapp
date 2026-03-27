@@ -1,7 +1,7 @@
 'use client'
+import { useRouter } from 'next/navigation'
 import { supabase } from './lib/supabase'
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 
 export default function Page() {
 
@@ -21,7 +21,17 @@ export default function Page() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [lastDeleted, setLastDeleted] = useState(null)
 
-  useEffect(() => {
+useEffect(() => {
+  const checkUser = async () => {
+    const { data } = await supabase.auth.getUser()
+
+    if (!data.user) {
+      router.push('/login')
+    }
+  }
+
+  checkUser()
+
   const load = async () => {
     const { data, error } = await supabase
       .from('records')

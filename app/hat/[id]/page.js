@@ -11,17 +11,25 @@ export default function HatDetay() {
   
 
 useEffect(() => {
-  const load = async () => {
-    const { data, error } = await supabase
+  const checkUser = async () => {
+    const { data } = await supabase.auth.getUser()
+
+    if (!data.user) {
+      router.push('/login')
+      return
+    }
+
+    // kullanıcı varsa veri çek
+    const { data: recordsData, error } = await supabase
       .from('records')
       .select('*')
 
-    if (!error && data) {
-      setRecords(data)
+    if (!error && recordsData) {
+      setRecords(recordsData)
     }
   }
 
-  load()
+  checkUser()
 }, [])
 
   const hatKayitlari = records.filter(r => r.line === id);
