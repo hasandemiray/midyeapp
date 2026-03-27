@@ -1,15 +1,15 @@
 'use client'
+
 import { useRouter } from 'next/navigation'
 import { supabase } from './lib/supabase'
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 
 export default function Page() {
-
   const router = useRouter()
 
-  const [block, setBlock] = useState(null)
-  const [selectedLine, setSelectedLine] = useState(null)
   const [records, setRecords] = useState([])
+  const [selectedLine, setSelectedLine] = useState(null)
 
   const [ara, setAra] = useState('')
   const [kg, setKg] = useState('')
@@ -18,352 +18,154 @@ export default function Page() {
     new Date().toISOString().split('T')[0]
   )
 
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [lastDeleted, setLastDeleted] = useState(null)
+  // 🔐 LOGIN KONTROL + VERİ ÇEK
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data } = await supabase.auth.getUser()
 
-useEffect(() => {
-  const checkUser = async () => {
-    const { data } = await supabase.auth.getUser()
+      if (!data.user) {
+        router.push('/login')
+        return
+      }
 
-    if (!data.user) {
-      router.push('/login')
+      const { data: recordsData } = await supabase
+        .from('records')
+        .select('*')
+
+      if (recordsData) setRecords(recordsData)
     }
+
+    checkUser()
+  }, [])
+
+  // 🚪 LOGOUT
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/login')
   }
 
-  checkUser()
+  // ➕ KAYDET
+  const handleSave = async () => {
+    if (!selectedLine) return alert('Hat seç')
 
-  const load = async () => {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('records')
-      .select('*')
+      .insert([
+        {
+          line: selectedLine,
+          ara: parseFloat(ara),
+          kg: parseFloat(kg),
+          cm: parseFloat(cm),
+          tarih
+        }
+      ])
 
-    if (!error && data) {
-      setRecords(data)
+    if (!error) {
+      alert('Kaydedildi')
+
+      const { data } = await supabase
+        .from('records')
+        .select('*')
+
+      setRecords(data || [])
     }
   }
 
-  load()
-}, [])
-const handleSave = async () => {
-  const yeni = {
-    line: selectedLine,
-    ara: parseFloat(ara) || 0,
-    kg: parseFloat(kg) || 0,
-    cm: parseFloat(cm) || 0,
-    tarih
-  }
-
-  const { error } = await supabase
-    .from('records')
-    .insert([yeni])
-
-  if (!error) {
-    setRecords(prev => [...prev, yeni])
-  }
-
-  setSelectedLine(null)
-  setAra('')
-  setKg('')
-  setCm('')
-}
-
-const confirmDelete = async () => {
-  const { error } = await supabase
-    .from('records')
-    .delete()
-    .eq('line', deleteTarget)
-
-  if (!error) {
-    const kalan = records.filter(r => r.line !== deleteTarget)
-    setRecords(kalan)
-  }
-
-  setDeleteTarget(null)
-}
-
-  const undoDelete = () => {
-    const updated = [...records, ...lastDeleted]
-    localStorage.setItem('records', JSON.stringify(updated))
-    setRecords(updated)
-    setLastDeleted(null)
-  }
+  const lines = ['A', 'B', 'C', 'D', 'E', 'F']
 
   return (
-    <div style={container}>
+    <div style={{ padding: 20 }}>
 
-      <h1>Midye Dashboard</h1>
+      {/* 🔥 ÜST BAR */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        marginBottom: 20
+      }}>
+        <b>👤 Hoşgeldin akana</b>
 
-      {/* BLOKLAR */}
-      <div style={blockBar}>
-        {['A','B','C','D','E','F'].map(b => (
-          <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
-            {b}
+        <button onClick={handleLogout}
+          style={{
+            background: '#ff4d4f',
+            color: 'white',
+            border: 'none',
+            borderRadius: 8,
+            padding: '6px 12px'
+          }}>
+          Çıkış
+        </button>
+      </div>
+
+      <h2>Midye Dashboard</h2>
+
+      {/* HATLAR */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3,1fr)',
+        gap: 10,
+        marginBottom: 20
+      }}>
+        {lines.map(l => (
+          <button
+            key={l}
+            onClick={() => setSelectedLine(l)}
+            style={{
+              padding: 15,
+              borderRadius: 10,
+              background: selectedLine === l ? '#0051a3' : '#0070f3',
+              color: 'white',
+              border: 'none'
+            }}
+          >
+            {l}
           </button>
         ))}
       </div>
 
-      {/* GRID */}
-      {block && (
-        <div style={grid}>
-          {[...Array(15)].map((_, i) => {
-            const hat = block + (i + 1)
-            const ilk = records.find(r => r.line === hat)
-
-            let boy = 0
-
-            if (ilk) {
-              const gun = Math.floor(
-                (new Date() - new Date(ilk.tarih))/(1000*60*60*24)
-              )
-
-              let buyume = 0
-
-              if (gun > 15) {
-                const ay = (gun - 15)/30
-                const ayNum = new Date().getMonth()+1
-
-                buyume = (ayNum >= 6 && ayNum <= 11)
-                  ? ay * 0.3
-                  : ay * 0.5
-              }
-
-              boy = (ilk.cm || 0) + buyume
-            }
-
-            const durum =
-              boy >= 6 ? '🟢'
-              : boy >= 5 ? '🟡'
-              : '🔴'
-
-            return (
-              <div key={i} style={card} onClick={()=>setSelectedLine(hat)}>
-
-                <div>
-                  <div style={hatTitle}>{hat}</div>
-                  <div style={hatInfo}>
-                    {durum} {boy.toFixed(2)} cm
-                  </div>
-                </div>
-
-                <div style={cardButtons}>
-
-                  <button
-                    onClick={(e)=>{
-                      e.stopPropagation()
-                      router.push(`/hat/${hat}`)
-                    }}
-                    style={btnDetail}
-                  >
-                    Detay
-                  </button>
-
-                  <button
-                    onClick={(e)=>{
-                      e.stopPropagation()
-                      setDeleteTarget(hat)
-                    }}
-                    style={btnDelete}
-                  >
-                    🗑️
-                  </button>
-
-                </div>
-
-              </div>
-            )
-          })}
-        </div>
-      )}
-
-      {/* 🔥 MODAL (YENİ TASARIM) */}
+      {/* FORM */}
       {selectedLine && (
-        <div style={overlay}>
-          <div style={modal}>
+        <div style={{
+          background: '#f5f5f5',
+          padding: 15,
+          borderRadius: 10,
+          marginBottom: 20
+        }}>
+          <h3>{selectedLine} Ekim</h3>
 
-            <h2>{selectedLine} Ekim</h2>
+          <input placeholder="Ara"
+            value={ara}
+            onChange={e => setAra(e.target.value)}
+          />
+          <input placeholder="Kg"
+            value={kg}
+            onChange={e => setKg(e.target.value)}
+          />
+          <input placeholder="Cm"
+            value={cm}
+            onChange={e => setCm(e.target.value)}
+          />
+          <input type="date"
+            value={tarih}
+            onChange={e => setTarih(e.target.value)}
+          />
 
-            <div>
-              <label style={label}>Ekilen Ara (ip sayısı)</label>
-              <input type="number" value={ara} onChange={e=>setAra(e.target.value)} style={input}/>
-            </div>
+          <br /><br />
 
-            <div>
-              <label style={label}>Metre Başına Midye (kg)</label>
-              <input type="number" step="0.1" value={kg} onChange={e=>setKg(e.target.value)} style={input}/>
-            </div>
-
-            <div>
-              <label style={label}>Ekilen Midye Boyu (cm)</label>
-              <input type="number" step="0.1" value={cm} onChange={e=>setCm(e.target.value)} style={input}/>
-            </div>
-
-            <div>
-              <label style={label}>Ekim Tarihi</label>
-              <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} style={input}/>
-            </div>
-
-            <small style={{color:'#666'}}>
-              1 ara = 56 metre
-            </small>
-
-            <button style={btnSave} onClick={handleSave}>Kaydet</button>
-            <button style={btnClose} onClick={()=>setSelectedLine(null)}>Kapat</button>
-
-          </div>
+          <button onClick={handleSave}>
+            Kaydet
+          </button>
         </div>
       )}
 
-      {/* DELETE */}
-      {deleteTarget && (
-        <div style={overlay}>
-          <div style={modal}>
-            <h3>{deleteTarget} silinsin mi?</h3>
-            <button onClick={confirmDelete} style={btnDelete}>Evet Sil</button>
-            <button onClick={()=>setDeleteTarget(null)}>Vazgeç</button>
-          </div>
+      {/* LİNKLER */}
+      {lines.map(l => (
+        <div key={l}>
+          <Link href={`/hat/${l}`}>
+            {l} Detay
+          </Link>
         </div>
-      )}
-
-      {/* UNDO */}
-      {lastDeleted && (
-        <div style={undo}>
-          Silindi
-          <button onClick={undoDelete}>Geri Al</button>
-        </div>
-      )}
+      ))}
 
     </div>
   )
-}
-
-/* 🎨 STYLES */
-
-const container = {
-  padding:20,
-  background:'#f0f2f5',
-  minHeight:'100vh'
-}
-
-const blockBar = {
-  display:'grid',
-  gridTemplateColumns:'repeat(3, 1fr)',
-  gap:12,
-  marginBottom:20
-}
-
-const btnBlue = {
-  background:'#0070f3',
-  color:'white',
-  border:'none',
-  padding:'18px 0',
-  borderRadius:12,
-  fontSize:20,
-  fontWeight:'bold'
-}
-
-const grid = {
-  display:'grid',
-  gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))',
-  gap:18
-}
-
-const card = {
-  background:'white',
-  padding:24,
-  borderRadius:18,
-  boxShadow:'0 8px 18px rgba(0,0,0,0.15)',
-  display:'flex',
-  flexDirection:'column',
-  gap:18,
-  cursor:'pointer'
-}
-
-const hatTitle = {
-  fontSize:24,
-  fontWeight:'bold'
-}
-
-const hatInfo = {
-  fontSize:18
-}
-
-const cardButtons = {
-  display:'flex',
-  gap:12
-}
-
-const btnDetail = {
-  flex:2,
-  background:'#333',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12,
-  fontSize:16
-}
-
-const btnDelete = {
-  flex:1,
-  background:'red',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12,
-  fontSize:16
-}
-
-const overlay = {
-  position:'fixed',
-  inset:0,
-  background:'rgba(0,0,0,0.5)',
-  display:'flex',
-  justifyContent:'center',
-  alignItems:'center'
-}
-
-const modal = {
-  background:'white',
-  padding:24,
-  borderRadius:16,
-  width:320,
-  display:'flex',
-  flexDirection:'column',
-  gap:12
-}
-
-const label = {
-  fontWeight:'bold',
-  fontSize:14
-}
-
-const input = {
-  width:'100%',
-  padding:10,
-  borderRadius:8,
-  border:'1px solid #ccc'
-}
-
-const btnSave = {
-  background:'#0070f3',
-  color:'white',
-  border:'none',
-  padding:12,
-  borderRadius:10
-}
-
-const btnClose = {
-  background:'#ddd',
-  border:'none',
-  padding:12,
-  borderRadius:10
-}
-
-const undo = {
-  position:'fixed',
-  bottom:20,
-  left:20,
-  background:'#333',
-  color:'white',
-  padding:10,
-  borderRadius:8
 }
