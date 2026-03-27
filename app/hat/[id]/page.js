@@ -7,7 +7,7 @@ import Link from 'next/link';
 export default function HatDetay() {
   const { id } = useParams();
   const [records, setRecords] = useState([]);
-
+  const [gecenGun, setGecenGun] = useState(0)
   
 
 useEffect(() => {
@@ -26,6 +26,24 @@ useEffect(() => {
 
     if (!error && recordsData) {
       setRecords(recordsData)
+
+      // 🔥 SADECE EKLENEN KISIM
+      const hatKayitlari = recordsData.filter(r => r.line === id)
+
+      if (hatKayitlari.length > 0) {
+        const sorted = [...hatKayitlari].sort(
+          (a, b) => new Date(a.tarih) - new Date(b.tarih)
+        )
+
+        const ilkTarih = new Date(sorted[0].tarih)
+        const bugun = new Date()
+
+        const fark = Math.floor(
+          (bugun - ilkTarih) / (1000 * 60 * 60 * 24)
+        )
+
+        setGecenGun(fark)
+      }
     }
   }
 
@@ -114,6 +132,9 @@ useEffect(() => {
       <Link href="/">← Ana Sayfa</Link>
 
       <h1>{id} Detay</h1>
+
+      {/* 🔥 SADECE EKLENEN */}
+      <h3>Geçen Gün: {gecenGun} gün</h3>
 
       {/* İLK EKİM */}
       {ilkKayit && (
