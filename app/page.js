@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import { useRouter } from 'next/navigation'
 import { supabase } from './lib/supabase'
@@ -6,9 +6,11 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
 export default function Page() {
+
   const router = useRouter()
 
   const [records, setRecords] = useState([])
+  const [block, setBlock] = useState(null)
   const [selectedLine, setSelectedLine] = useState(null)
 
   const [ara, setAra] = useState('')
@@ -18,7 +20,9 @@ export default function Page() {
     new Date().toISOString().split('T')[0]
   )
 
-  // 🔐 LOGIN KONTROL + VERİ ÇEK
+  const [deleteTarget, setDeleteTarget] = useState(null)
+
+  // 🔐 LOGIN + DATA
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser()
@@ -44,34 +48,46 @@ export default function Page() {
     router.push('/login')
   }
 
-  // ➕ KAYDET
+  // 💾 SAVE
   const handleSave = async () => {
-    if (!selectedLine) return alert('Hat seç')
-
     const { error } = await supabase
       .from('records')
       .insert([
         {
           line: selectedLine,
-          ara: parseFloat(ara),
-          kg: parseFloat(kg),
-          cm: parseFloat(cm),
+          ara: parseFloat(ara) || 0,
+          kg: parseFloat(kg) || 0,
+          cm: parseFloat(cm) || 0,
           tarih
         }
       ])
 
     if (!error) {
-      alert('Kaydedildi')
-
       const { data } = await supabase
         .from('records')
         .select('*')
 
       setRecords(data || [])
+      setSelectedLine(null)
+      setAra('')
+      setKg('')
+      setCm('')
     }
   }
 
-  const lines = ['A', 'B', 'C', 'D', 'E', 'F']
+  // ❌ DELETE
+  const confirmDelete = async () => {
+    const { error } = await supabase
+      .from('records')
+      .delete()
+      .eq('line', deleteTarget)
+
+    if (!error) {
+      const kalan = records.filter(r => r.line !== deleteTarget)
+      setRecords(kalan)
+      setDeleteTarget(null)
+    }
+  }
 
   return (
     <div style={{ padding: 20 }}>
@@ -96,75 +112,97 @@ export default function Page() {
         </button>
       </div>
 
-      <h2>Midye Dashboard</h2>
+      <h1>Midye Dashboard</h1>
 
-      {/* HATLAR */}
+      {/* BLOKLAR */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(3,1fr)',
-        gap: 10,
-        marginBottom: 20
+        gap: 10
       }}>
-        {lines.map(l => (
-          <button
-            key={l}
-            onClick={() => setSelectedLine(l)}
-            style={{
-              padding: 15,
-              borderRadius: 10,
-              background: selectedLine === l ? '#0051a3' : '#0070f3',
-              color: 'white',
-              border: 'none'
-            }}
-          >
-            {l}
+        {['A','B','C','D','E','F'].map(b => (
+          <button key={b} onClick={() => setBlock(b)}>
+            {b}
           </button>
         ))}
       </div>
 
-      {/* FORM */}
-      {selectedLine && (
+      {/* GRID */}
+      {block && (
         <div style={{
-          background: '#f5f5f5',
-          padding: 15,
-          borderRadius: 10,
-          marginBottom: 20
+          display:'grid',
+          gridTemplateColumns:'repeat(3,1fr)',
+          gap:10,
+          marginTop:20
         }}>
-          <h3>{selectedLine} Ekim</h3>
+          {[...Array(15)].map((_, i) => {
+            const hat = block + (i + 1)
 
-          <input placeholder="Ara"
-            value={ara}
-            onChange={e => setAra(e.target.value)}
-          />
-          <input placeholder="Kg"
-            value={kg}
-            onChange={e => setKg(e.target.value)}
-          />
-          <input placeholder="Cm"
-            value={cm}
-            onChange={e => setCm(e.target.value)}
-          />
-          <input type="date"
-            value={tarih}
-            onChange={e => setTarih(e.target.value)}
-          />
+            return (
+              <div
+                key={i}
+                onClick={()=>setSelectedLine(hat)}
+                style={{
+                  border:'1px solid #ccc',
+                  padding:10,
+                  borderRadius:10
+                }}
+              >
+                <div>{hat}</div>
 
-          <br /><br />
+                <button onClick={(e)=>{
+                  e.stopPropagation()
+                  router.push(`/hat/${hat}`)
+                }}>
+                  Detay
+                </button>
 
-          <button onClick={handleSave}>
-            Kaydet
-          </button>
+                <button onClick={(e)=>{
+                  e.stopPropagation()
+                  setDeleteTarget(hat)
+                }}>
+                  Sil
+                </button>
+              </div>
+            )
+          })}
         </div>
       )}
 
-      {/* LİNKLER */}
-      {lines.map(l => (
-        <div key={l}>
-          <Link href={`/hat/${l}`}>
-            {l} Detay
-          </Link>
+      {/* MODAL */}
+      {selectedLine && (
+        <div style={{
+          background:'#f5f5f5',
+          padding:15,
+          borderRadius:10,
+          marginTop:20
+        }}>
+          <h3>{selectedLine}</h3>
+
+          <input placeholder="Ara" value={ara} onChange={e=>setAra(e.target.value)} />
+          <input placeholder="KG" value={kg} onChange={e=>setKg(e.target.value)} />
+          <input placeholder="CM" value={cm} onChange={e=>setCm(e.target.value)} />
+          <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} />
+
+          <br /><br />
+
+          <button onClick={handleSave}>Kaydet</button>
+          <button onClick={()=>setSelectedLine(null)}>Kapat</button>
         </div>
-      ))}
+      )}
+
+      {/* DELETE CONFIRM */}
+      {deleteTarget && (
+        <div style={{
+          background:'#fff3f3',
+          padding:15,
+          marginTop:10
+        }}>
+          <p>Silinsin mi?</p>
+          <button onClick={confirmDelete}>Evet</button>
+          <button onClick={()=>setDeleteTarget(null)}>Vazgeç</button>
+        </div>
+      )}
 
     </div>
   )
