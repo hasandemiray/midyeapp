@@ -1,5 +1,5 @@
 'use client';
-
+import { supabase } from '../../lib/supabase'
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ export default function HatDetay() {
   const { id } = useParams();
   const [records, setRecords] = useState([]);
 
-  import { supabase } from '../../lib/supabase'
+  
 
 useEffect(() => {
   const load = async () => {
