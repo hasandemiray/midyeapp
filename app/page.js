@@ -142,11 +142,11 @@ export default function Page() {
 
       {/* BLOKLAR */}
       <div style={blockBar}>
-        {['A','B','C','D','E','F'].map(b => (
-          <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
-            {b}
-          </button>
-        ))}
+       {['A','B','C','D','E','F'].map(b => (
+  <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
+    {b} Blok
+  </button>
+))}
       </div>
 
       {/* GRID */}
