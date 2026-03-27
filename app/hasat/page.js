@@ -11,61 +11,73 @@ export default function Hasat() {
   const [records, setRecords] = useState([])
   const [kg, setKg] = useState('')
   const [kalanKg, setKalanKg] = useState(0)
+  const [toplamKg, setToplamKg] = useState(0)
 
   // 🔐 login + veri çek
   useEffect(() => {
-  const checkUser = async () => {
+    const checkUser = async () => {
 
-    const { data: userData } = await supabase.auth.getUser()
+      const { data: userData } = await supabase.auth.getUser()
 
-    if (!userData.user) {
-      router.push('/login')
-      return
+      if (!userData.user) {
+        router.push('/login')
+        return
+      }
+
+      const { data: recordsData } = await supabase
+        .from('records')
+        .select('*')
+
+      setRecords(recordsData || [])
     }
 
-    const { data: recordsData } = await supabase
-      .from('records')
-      .select('*')
+    checkUser()
+  }, [])
 
-    setRecords(recordsData || [])
-  }
+  // 🔥 DETAY SAYFASI MANTIĞI AYNI (TEK YERDEN)
+  useEffect(() => {
 
-  checkUser()
-}, [])
+    if (!line) return
 
-  // 🔥 DETAY SAYFASIYLA AYNI HESAP
-  const hatKayitlari = records.filter(r => r.line === line)
+    const hatKayitlari = records.filter(r => r.line === line)
 
-  const sirali = [...hatKayitlari].sort(
-    (a, b) => new Date(a.tarih) - new Date(b.tarih)
-  )
-
-  let toplamKg = 0
-
-  sirali.forEach(r => {
-
-    const ekimTarihi = new Date(r.tarih)
-    const bugun = new Date()
-
-    const gun = Math.floor(
-      (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
+    const sirali = [...hatKayitlari].sort(
+      (a, b) => new Date(a.tarih) - new Date(b.tarih)
     )
 
-    const halat = 56
-    const hatMetre = (r.ara || 1) * halat
+    let guncelKg = 0
 
-    let kgDeger = parseFloat(r.kg) || 0
+    sirali.forEach(r => {
 
- kgDeger *= (2 ** (gun / 120))
+      const ekimTarihi = new Date(r.tarih)
+      const bugun = new Date()
 
-    toplamKg += kgDeger * hatMetre
-  })
+      const gun = Math.floor(
+        (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
+      )
 
-  // 🔥 CANLI KALAN
+      const halat = 56
+      const hatMetre = (r.ara || 1) * halat
+
+      let kgDeger = parseFloat(r.kg) || 0
+
+      if (r.cm <= 3) {
+        kgDeger *= (4 ** (gun / 180))
+      } else if (r.cm <= 4.5) {
+        kgDeger *= (2 ** (gun / 120))
+      }
+
+      guncelKg += kgDeger * hatMetre
+    })
+
+    setToplamKg(guncelKg)
+
+  }, [line, records])
+
+  // 🔥 KALAN HESAP
   useEffect(() => {
     if (kg !== '') {
-      const kalan = toplamKg - (parseFloat(kg) || 0)
-      setKalanKg(kalan)
+      setKalanKg(toplamKg - (parseFloat(kg) || 0))
     }
   }, [kg, toplamKg])
 
@@ -103,10 +115,8 @@ export default function Hasat() {
 
       <hr />
 
-      {/* 🔥 DETAY GİBİ */}
       <h2>Toplam KG: {toplamKg.toFixed(2)}</h2>
 
-      {/* 🔥 HASAT */}
       {line && (
         <>
           <input
