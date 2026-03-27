@@ -9,29 +9,22 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const router = useRouter()
 
-  // 🔥 kullanıcı adı → email eşleştirme
-  const userMap = {
-    admin: 'admin@test.com',
-    worker: 'worker@test.com'
-  }
-
   const handleLogin = async () => {
-    const email = userMap[username]
-
-    if (!email) {
-      alert('Kullanıcı bulunamadı')
+    // 🔐 sadece bu kullanıcıya izin ver
+    if (username !== 'akana') {
+      alert('Kullanıcı adı hatalı')
       return
     }
 
     const { error } = await supabase.auth.signInWithPassword({
-      email,
+      email: 'akana@test.com',
       password
     })
 
     if (!error) {
       router.push('/')
     } else {
-      alert('Şifre yanlış')
+      alert('Şifre hatalı')
     }
   }
 
@@ -91,10 +84,6 @@ export default function Login() {
         >
           Giriş Yap
         </button>
-
-        <small style={{ textAlign: 'center', color: '#888' }}>
-          yetkili kullanıcı girişi
-        </small>
 
       </div>
     </div>
