@@ -93,7 +93,7 @@ export default function Login() {
         </button>
 
         <small style={{ textAlign: 'center', color: '#888' }}>
-          admin / 123456
+          yetkili kullanıcı girişi
         </small>
 
       </div>
