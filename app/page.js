@@ -146,4 +146,7 @@ const confirmDelete = async () => {
             {b}
           </button>
         ))}
+          </div>
       </div>
+  )
+}
