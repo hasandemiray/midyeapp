@@ -8,15 +8,21 @@ export default function HatDetay() {
   const { id } = useParams();
   const [records, setRecords] = useState([]);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem('records');
-      const parsed = JSON.parse(raw || "[]");
-      setRecords(Array.isArray(parsed) ? parsed : []);
-    } catch {
-      setRecords([]);
+  import { supabase } from '../../lib/supabase'
+
+useEffect(() => {
+  const load = async () => {
+    const { data, error } = await supabase
+      .from('records')
+      .select('*')
+
+    if (!error && data) {
+      setRecords(data)
     }
-  }, []);
+  }
+
+  load()
+}, [])
 
   const hatKayitlari = records.filter(r => r.line === id);
 
