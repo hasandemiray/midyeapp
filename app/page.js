@@ -1,19 +1,35 @@
 'use client'
-import { supabase } from '../lib/supabase'
-import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { supabase } from './lib/supabase'
+import { useState, useEffect } from 'react'
+import { hesaplaHat } from './lib/hesapla' // 🔥 EKLENDİ
 
-export default function Hasat() {
+export default function Page() {
 
   const router = useRouter()
 
-  const [line, setLine] = useState('')
+  const [block, setBlock] = useState(null)
+  const [selectedLine, setSelectedLine] = useState(null)
+  const [records, setRecords] = useState([])
+
   const [ara, setAra] = useState('')
   const [kg, setKg] = useState('')
-  const [records, setRecords] = useState([])
-  const [kalanKg, setKalanKg] = useState(0)
+  const [cm, setCm] = useState('')
+  const [tarih, setTarih] = useState(
+    new Date().toISOString().split('T')[0]
+  )
 
-  // 🔐 login + verileri çek
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [lastDeleted, setLastDeleted] = useState(null)
+
+  // 🔥 YENİ STATE
+  const [stats, setStats] = useState({
+    dolu: 0,
+    hasadaYakin: 0,
+    toplamKg: 0,
+    hasatHatlar: []
+  })
+
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser()
@@ -22,95 +38,328 @@ export default function Hasat() {
         router.push('/login')
         return
       }
-
-      const { data: rec } = await supabase
-        .from('records')
-        .select('*')
-
-      setRecords(rec || [])
     }
 
     checkUser()
+
+    const load = async () => {
+      const { data, error } = await supabase
+        .from('records')
+        .select('*')
+
+      if (!error && data) {
+        setRecords(data)
+      }
+    }
+
+    load()
   }, [])
 
-  // 🔥 toplam kg hesap
-  const toplamKg = records
-    .filter(r => r.line === line)
-    .reduce((sum, r) => {
-      const halat = 56
-      return sum + ((parseFloat(r.kg)||0) * (r.ara||1) * halat)
-    }, 0)
-
-  // 🔥 CANLI HESAP (EN ÖNEMLİ)
+  // 🔥 YENİ HESAPLAMA
   useEffect(() => {
-    if (line && kg !== '') {
-      const kalan = toplamKg - (parseFloat(kg) || 0)
-      setKalanKg(kalan)
-    }
-  }, [kg, line, toplamKg])
 
-  // 💾 kaydet
+    if (records.length === 0) return
+
+    const bloklar = ['A','B','C','D','E','F']
+
+    let dolu = 0
+    let hasadaYakin = 0
+    let toplamKg = 0
+    let hasatHatlar = []
+
+    bloklar.forEach(b => {
+      for (let i = 1; i <= 15; i++) {
+
+        const line = b + (i+1)
+
+        const { guncelKg, guncelBoy } =
+          hesaplaHat(records, line)
+
+        if (guncelKg > 0) {
+          dolu++
+          toplamKg += guncelKg
+        }
+
+        if (guncelBoy >= 6) {
+          hasadaYakin++
+          hasatHatlar.push(line)
+        }
+      }
+    })
+
+    setStats({
+      dolu,
+      hasadaYakin,
+      toplamKg,
+      hasatHatlar
+    })
+
+  }, [records])
+
   const handleSave = async () => {
-
-    if (!line) return alert("Hat seç")
+    const yeni = {
+      line: selectedLine,
+      ara: parseFloat(ara) || 0,
+      kg: parseFloat(kg) || 0,
+      cm: parseFloat(cm) || 0,
+      tarih
+    }
 
     const { error } = await supabase
-      .from('hasat')
-      .insert([{
-        line,
-        ara: parseFloat(ara) || 0,
-        kg: parseFloat(kg) || 0
-      }])
+      .from('records')
+      .insert([yeni])
 
     if (!error) {
-      alert("Hasat kaydedildi")
+      setRecords(prev => [...prev, yeni])
     }
+
+    setSelectedLine(null)
+    setAra('')
+    setKg('')
+    setCm('')
+  }
+
+  const confirmDelete = async () => {
+    const { error } = await supabase
+      .from('records')
+      .delete()
+      .eq('line', deleteTarget)
+
+    if (!error) {
+      const kalan = records.filter(r => r.line !== deleteTarget)
+      setRecords(kalan)
+    }
+
+    setDeleteTarget(null)
+  }
+
+  const undoDelete = () => {
+    const updated = [...records, ...lastDeleted]
+    localStorage.setItem('records', JSON.stringify(updated))
+    setRecords(updated)
+    setLastDeleted(null)
   }
 
   return (
-    <div style={{ padding:20 }}>
+    <div style={container}>
 
-      <button onClick={()=>router.push('/')}>← ANASAYFA</button>
+      {/* ÜST BAR */}
+      <div style={{
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center',
+        marginBottom:15
+      }}>
+        <b>👤 Hoşgeldin akana</b>
 
-      <h1>HASAT PANELİ</h1>
+        <button
+          onClick={() => router.push('/hasat')}
+          style={{
+            background:'green',
+            color:'white',
+            padding:'10px',
+            borderRadius:10,
+            fontWeight:'bold',
+            marginBottom:10
+          }}
+        >
+          HASAT
+        </button>
 
-      {/* HAT SEÇ */}
-      <select onChange={e=>setLine(e.target.value)}>
-        <option value="">Hat seç</option>
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut()
+            router.push('/login')
+          }}
+          style={{
+            background:'#ff4d4f',
+            color:'white',
+            border:'none',
+            padding:'8px 14px',
+            borderRadius:8,
+            fontWeight:'bold'
+          }}
+        >
+          Çıkış
+        </button>
+      </div>
 
-        {['A','B','C','D','E','F'].map(b =>
-          [...Array(15)].map((_,i)=> {
-            const hat = b + (i+1)
-            return <option key={hat}>{hat}</option>
-          })
-        )}
+      {/* 🔥 YENİ DASHBOARD */}
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(4,1fr)',
+        gap:10,
+        marginBottom:20
+      }}>
 
-      </select>
+        <div style={statCard}>
+          Dolu Hat<br/><b>{stats.dolu}</b>
+        </div>
 
-      <br /><br />
+        <div style={statCard}>
+          Hasada Yakın<br/><b>{stats.hasadaYakin}</b>
+        </div>
 
-      <input
-        placeholder="Kaç Ara Hasat"
-        onChange={e=>setAra(e.target.value)}
-      />
+        <div style={statCard}>
+          Toplam KG<br/><b>{stats.toplamKg.toFixed(0)}</b>
+        </div>
 
-      <br /><br />
+        <div style={statCard}>
+          Hasat Hatları<br/><b>{stats.hasatHatlar.length}</b>
+        </div>
 
-      <input
-        placeholder="Satış KG"
-        onChange={e=>setKg(e.target.value)}
-      />
+      </div>
 
-      <br /><br />
+      {/* 🔥 HASAT LİSTESİ */}
+      <div style={{
+        background:'#fff',
+        padding:15,
+        borderRadius:12,
+        marginBottom:20
+      }}>
+        <h3>🟢 Hasat Zamanı Gelen Hatlar</h3>
+        <div>{stats.hasatHatlar.join(', ') || 'Yok'}</div>
+      </div>
 
-      <button onClick={handleSave}>Kaydet</button>
+      {/* BAŞLIK */}
+      <div style={{
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        gap:12,
+        marginBottom:25
+      }}>
+        <img src="/midye.png" style={{width:50}} />
 
-      <hr />
+        <h1 style={{
+          fontSize:30,
+          fontWeight:'bold'
+        }}>
+          MİDYE TAKİP SİSTEMİ
+        </h1>
 
-      <h3>Toplam KG: {toplamKg.toFixed(2)}</h3>
-      <h3>Hasat Edilen: {kg || 0}</h3>
-      <h3>Kalan KG: {kalanKg.toFixed(2)}</h3>
+        <img src="/midye.png" style={{width:50, transform:'scaleX(-1)'}} />
+      </div>
+
+      {/* BLOKLAR */}
+      <div style={blockBar}>
+        {['A','B','C','D','E','F'].map(b => (
+          <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
+            {b} Blok
+          </button>
+        ))}
+      </div>
+
+      {/* GRID */}
+      {block && (
+        <div style={grid}>
+          {[...Array(15)].map((_, i) => {
+            const hat = block + (i + 1)
+            const ilk = records.find(r => r.line === hat)
+
+            let boy = 0
+
+            if (ilk) {
+              const gun = Math.floor(
+                (new Date() - new Date(ilk.tarih))/(1000*60*60*24)
+              )
+
+              let buyume = 0
+
+              if (gun > 15) {
+                const ay = (gun - 15)/30
+                const ayNum = new Date().getMonth()+1
+
+                buyume = (ayNum >= 6 && ayNum <= 11)
+                  ? ay * 0.3
+                  : ay * 0.5
+              }
+
+              boy = (ilk.cm || 0) + buyume
+            }
+
+            const durum =
+              boy >= 6 ? '🟢'
+              : boy >= 5 ? '🟡'
+              : '🔴'
+
+            return (
+              <div key={i} style={card} onClick={()=>setSelectedLine(hat)}>
+
+                <div>
+                  <div style={hatTitle}>{hat}</div>
+                  <div style={hatInfo}>
+                    {durum} {boy.toFixed(2)} cm
+                  </div>
+                </div>
+
+                <div style={cardButtons}>
+                  <button
+                    onClick={(e)=>{
+                      e.stopPropagation()
+                      router.push(`/hat/${hat}`)
+                    }}
+                    style={btnDetail}
+                  >
+                    Detay
+                  </button>
+
+                  <button
+                    onClick={(e)=>{
+                      e.stopPropagation()
+                      setDeleteTarget(hat)
+                    }}
+                    style={btnDelete}
+                  >
+                    🗑️
+                  </button>
+                </div>
+
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* MODAL */}
+      {selectedLine && (
+        <div style={overlay}>
+          <div style={modal}>
+
+            <h2>{selectedLine} Ekim</h2>
+
+            <input placeholder="Ara" value={ara} onChange={e=>setAra(e.target.value)} style={input}/>
+            <input placeholder="KG" value={kg} onChange={e=>setKg(e.target.value)} style={input}/>
+            <input placeholder="CM" value={cm} onChange={e=>setCm(e.target.value)} style={input}/>
+            <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} style={input}/>
+
+            <button style={btnSave} onClick={handleSave}>Kaydet</button>
+            <button style={btnClose} onClick={()=>setSelectedLine(null)}>Kapat</button>
+
+          </div>
+        </div>
+      )}
+
+      {/* DELETE */}
+      {deleteTarget && (
+        <div style={overlay}>
+          <div style={modal}>
+            <h3>{deleteTarget} silinsin mi?</h3>
+            <button onClick={confirmDelete} style={btnDelete}>Evet</button>
+            <button onClick={()=>setDeleteTarget(null)}>Vazgeç</button>
+          </div>
+        </div>
+      )}
 
     </div>
   )
+}
+
+/* 🔥 YENİ STYLE */
+const statCard = {
+  background:'#111',
+  color:'white',
+  padding:15,
+  borderRadius:12,
+  textAlign:'center'
 }
