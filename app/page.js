@@ -354,7 +354,11 @@ export default function Page() {
     </div>
   )
 }
-
+const container = {
+  padding: 20,
+  background: '#f0f2f5',
+  minHeight: '100vh'
+}
 /* 🔥 YENİ STYLE */
 const statCard = {
   background:'#111',
