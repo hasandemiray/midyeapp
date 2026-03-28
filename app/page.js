@@ -2,7 +2,6 @@
 import { useRouter } from 'next/navigation'
 import { supabase } from './lib/supabase'
 import { useState, useEffect } from 'react'
-import { hesaplaHat } from './lib/hesapla' // 🔥 EKLENDİ
 
 export default function Page() {
 
@@ -21,14 +20,6 @@ export default function Page() {
 
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [lastDeleted, setLastDeleted] = useState(null)
-
-  // 🔥 YENİ STATE
-  const [stats, setStats] = useState({
-    dolu: 0,
-    hasadaYakin: 0,
-    toplamKg: 0,
-    hasatHatlar: []
-  })
 
   useEffect(() => {
     const checkUser = async () => {
@@ -54,47 +45,6 @@ export default function Page() {
 
     load()
   }, [])
-
-  // 🔥 YENİ HESAPLAMA
-  useEffect(() => {
-
-    if (records.length === 0) return
-
-    const bloklar = ['A','B','C','D','E','F']
-
-    let dolu = 0
-    let hasadaYakin = 0
-    let toplamKg = 0
-    let hasatHatlar = []
-
-    bloklar.forEach(b => {
-      for (let i = 1; i <= 15; i++) {
-
-        const line = b + (i+1)
-
-        const { guncelKg, guncelBoy } =
-          hesaplaHat(records, line)
-
-        if (guncelKg > 0) {
-          dolu++
-          toplamKg += guncelKg
-        }
-
-        if (guncelBoy >= 6) {
-          hasadaYakin++
-          hasatHatlar.push(line)
-        }
-      }
-    })
-
-    setStats({
-      dolu,
-      hasadaYakin,
-      toplamKg,
-      hasatHatlar
-    })
-
-  }, [records])
 
   const handleSave = async () => {
     const yeni = {
@@ -151,21 +101,19 @@ export default function Page() {
         marginBottom:15
       }}>
         <b>👤 Hoşgeldin akana</b>
-
-        <button
-          onClick={() => router.push('/hasat')}
-          style={{
-            background:'green',
-            color:'white',
-            padding:'10px',
-            borderRadius:10,
-            fontWeight:'bold',
-            marginBottom:10
-          }}
-        >
-          HASAT
-        </button>
-
+<button
+  onClick={() => router.push('/hasat')}
+  style={{
+    background:'green',
+    color:'white',
+    padding:'10px',
+    borderRadius:10,
+    fontWeight:'bold',
+    marginBottom:10
+  }}
+>
+  HASAT
+</button>
         <button
           onClick={async () => {
             await supabase.auth.signOut()
@@ -182,43 +130,6 @@ export default function Page() {
         >
           Çıkış
         </button>
-      </div>
-
-      {/* 🔥 YENİ DASHBOARD */}
-      <div style={{
-        display:'grid',
-        gridTemplateColumns:'repeat(4,1fr)',
-        gap:10,
-        marginBottom:20
-      }}>
-
-        <div style={statCard}>
-          Dolu Hat<br/><b>{stats.dolu}</b>
-        </div>
-
-        <div style={statCard}>
-          Hasada Yakın<br/><b>{stats.hasadaYakin}</b>
-        </div>
-
-        <div style={statCard}>
-          Toplam KG<br/><b>{stats.toplamKg.toFixed(0)}</b>
-        </div>
-
-        <div style={statCard}>
-          Hasat Hatları<br/><b>{stats.hasatHatlar.length}</b>
-        </div>
-
-      </div>
-
-      {/* 🔥 HASAT LİSTESİ */}
-      <div style={{
-        background:'#fff',
-        padding:15,
-        borderRadius:12,
-        marginBottom:20
-      }}>
-        <h3>🟢 Hasat Zamanı Gelen Hatlar</h3>
-        <div>{stats.hasatHatlar.join(', ') || 'Yok'}</div>
       </div>
 
       {/* BAŞLIK */}
@@ -243,11 +154,11 @@ export default function Page() {
 
       {/* BLOKLAR */}
       <div style={blockBar}>
-        {['A','B','C','D','E','F'].map(b => (
-          <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
-            {b} Blok
-          </button>
-        ))}
+       {['A','B','C','D','E','F'].map(b => (
+  <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
+    {b} Blok
+  </button>
+))}
       </div>
 
       {/* GRID */}
@@ -354,22 +265,107 @@ export default function Page() {
     </div>
   )
 }
+
+/* STYLES */
 const container = {
-  padding: 20,
-  background: '#f0f2f5',
-  minHeight: '100vh'
+  padding:20,
+  background:'#f0f2f5',
+  minHeight:'100vh'
 }
-/* 🔥 YENİ STYLE */
-const statCard = {
-  background:'#111',
-  color:'white',
-  padding:15,
-  borderRadius:12,
-  textAlign:'center'
-}
+
 const blockBar = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: 12,
-  marginBottom: 20
+  display:'grid',
+  gridTemplateColumns:'repeat(3, 1fr)',
+  gap:12,
+  marginBottom:20
+}
+
+const btnBlue = {
+  background:'#0070f3',
+  color:'white',
+  border:'none',
+  padding:'18px 0',
+  borderRadius:12,
+  fontSize:20,
+  fontWeight:'bold'
+}
+
+const grid = {
+  display:'grid',
+  gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))',
+  gap:18
+}
+
+const card = {
+  background:'white',
+  padding:24,
+  borderRadius:18,
+  boxShadow:'0 8px 18px rgba(0,0,0,0.15)',
+  display:'flex',
+  flexDirection:'column',
+  gap:18,
+  cursor:'pointer'
+}
+
+const hatTitle = { fontSize:24, fontWeight:'bold' }
+const hatInfo = { fontSize:18 }
+
+const cardButtons = { display:'flex', gap:12 }
+
+const btnDetail = {
+  flex:2,
+  background:'#333',
+  color:'white',
+  border:'none',
+  padding:'14px',
+  borderRadius:12
+}
+
+const btnDelete = {
+  flex:1,
+  background:'red',
+  color:'white',
+  border:'none',
+  padding:'14px',
+  borderRadius:12
+}
+
+const overlay = {
+  position:'fixed',
+  inset:0,
+  background:'rgba(0,0,0,0.5)',
+  display:'flex',
+  justifyContent:'center',
+  alignItems:'center'
+}
+
+const modal = {
+  background:'white',
+  padding:24,
+  borderRadius:16,
+  width:320,
+  display:'flex',
+  flexDirection:'column',
+  gap:10
+}
+
+const input = {
+  padding:10,
+  borderRadius:8,
+  border:'1px solid #ccc'
+}
+
+const btnSave = {
+  background:'#0070f3',
+  color:'white',
+  padding:12,
+  border:'none',
+  borderRadius:10
+}
+
+const btnClose = {
+  background:'#ddd',
+  padding:12,
+  border:'none',
+  borderRadius:10
 }
