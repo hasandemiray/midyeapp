@@ -367,3 +367,9 @@ const statCard = {
   borderRadius:12,
   textAlign:'center'
 }
+const blockBar = {
+  display: 'grid',
+  gridTemplateColumns: 'repeat(3, 1fr)',
+  gap: 12,
+  marginBottom: 20
+}
