@@ -21,8 +21,6 @@ export default function Page() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [lastDeleted, setLastDeleted] = useState(null)
 
-  const [weather, setWeather] = useState(null)
-
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser()
@@ -46,51 +44,6 @@ export default function Page() {
     }
 
     load()
-  }, [])
-
-  // 🔥 HAVA + DENİZ (SADECE BU KISIM GÜNCELLENDİ)
-  useEffect(() => {
-
-    const getWeather = async () => {
-      try {
-        const lat = 40.40
-        const lon = 27.85
-
-        const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=sea_surface_temperature`
-        )
-
-        const data = await res.json()
-
-        if (!data?.current_weather) return
-
-        // 🔥 SADECE BURASI DEĞİŞTİ
-        const times = data.hourly?.time || []
-        const temps = data.hourly?.sea_surface_temperature || []
-
-        const nowHour = new Date().toISOString().slice(0,13)
-
-        let seaTemp = null
-
-        for (let i = 0; i < times.length; i++) {
-          if (times[i].startsWith(nowHour)) {
-            seaTemp = temps[i]
-            break
-          }
-        }
-
-        setWeather({
-          temp: data.current_weather.temperature,
-          sea: seaTemp
-        })
-
-      } catch (err) {
-        console.log("weather error", err)
-      }
-    }
-
-    getWeather()
-
   }, [])
 
   const handleSave = async () => {
@@ -133,6 +86,7 @@ export default function Page() {
   return (
     <div style={container}>
 
+      {/* ÜST BAR (AYNI) */}
       <div style={{
         display:'flex',
         justifyContent:'space-between',
@@ -171,24 +125,7 @@ export default function Page() {
         </button>
       </div>
 
-      {/* WEATHER */}
-      <div style={{
-        background:'#1e293b',
-        padding:12,
-        borderRadius:12,
-        marginBottom:15,
-        color:'white'
-      }}>
-        <div>📅 {new Date().toLocaleDateString()}</div>
-
-        {weather && (
-          <>
-            <div>🌤️ Hava: {weather.temp}°C</div>
-            <div>🌊 Deniz: {weather.sea ? weather.sea.toFixed(1) : '-'}°C</div>
-          </>
-        )}
-      </div>
-
+      {/* BAŞLIK */}
       <div style={{
         display:'flex',
         alignItems:'center',
@@ -208,6 +145,7 @@ export default function Page() {
         <img src="/midye.png" style={{width:50, transform:'scaleX(-1)'}} />
       </div>
 
+      {/* BLOKLAR */}
       <div style={blockBar}>
         {['A','B','C','D','E','F'].map(b => (
           <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
@@ -216,6 +154,7 @@ export default function Page() {
         ))}
       </div>
 
+      {/* 🔥 SADECE EKLENEN */}
       <div style={{marginBottom:20}}>
         <button
           onClick={() => router.push('/analiz')}
@@ -234,6 +173,7 @@ export default function Page() {
         </button>
       </div>
 
+      {/* GRID (ORİJİNAL HALİ) */}
       {block && (
         <div style={grid}>
           {[...Array(15)].map((_, i) => {
@@ -276,6 +216,7 @@ export default function Page() {
                   </div>
                 </div>
 
+                {/* 🔥 ORİJİNAL BUTONLAR GERİ GELDİ */}
                 <div style={cardButtons}>
                   <button
                     onClick={(e)=>{
@@ -304,6 +245,7 @@ export default function Page() {
         </div>
       )}
 
+      {/* MODAL */}
       {selectedLine && (
         <div style={overlay}>
           <div style={modal}>
@@ -320,6 +262,7 @@ export default function Page() {
         </div>
       )}
 
+      {/* DELETE */}
       {deleteTarget && (
         <div style={overlay}>
           <div style={modal}>
@@ -334,8 +277,7 @@ export default function Page() {
   )
 }
 
-/* STYLE (DEĞİŞMEDİ) */
-
+/* STYLES (AYNI) */
 const container = {
   padding:20,
   background:'#f0f2f5',
@@ -344,71 +286,64 @@ const container = {
 
 const blockBar = {
   display:'grid',
-  gridTemplateColumns:'repeat(3,1fr)',
-  gap:10,
+  gridTemplateColumns:'repeat(3, 1fr)',
+  gap:12,
   marginBottom:20
 }
 
 const btnBlue = {
-  background:'#1677ff',
+  background:'#0070f3',
   color:'white',
-  padding:'14px',
   border:'none',
-  borderRadius:10,
+  padding:'18px 0',
+  borderRadius:12,
+  fontSize:20,
   fontWeight:'bold'
 }
 
 const grid = {
   display:'grid',
-  gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',
-  gap:15
+  gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))',
+  gap:18
 }
 
 const card = {
   background:'white',
-  padding:15,
-  borderRadius:12,
+  padding:24,
+  borderRadius:18,
+  boxShadow:'0 8px 18px rgba(0,0,0,0.15)',
   display:'flex',
-  justifyContent:'space-between',
-  alignItems:'center'
+  flexDirection:'column',
+  gap:18,
+  cursor:'pointer'
 }
 
-const hatTitle = {
-  fontWeight:'bold',
-  fontSize:18
-}
+const hatTitle = { fontSize:24, fontWeight:'bold' }
+const hatInfo = { fontSize:18 }
 
-const hatInfo = {
-  fontSize:14
-}
-
-const cardButtons = {
-  display:'flex',
-  gap:5
-}
+const cardButtons = { display:'flex', gap:12 }
 
 const btnDetail = {
-  background:'#52c41a',
+  flex:2,
+  background:'#333',
   color:'white',
   border:'none',
-  padding:'6px 8px',
-  borderRadius:6
+  padding:'14px',
+  borderRadius:12
 }
 
 const btnDelete = {
-  background:'#ff4d4f',
+  flex:1,
+  background:'red',
   color:'white',
   border:'none',
-  padding:'6px 8px',
-  borderRadius:6
+  padding:'14px',
+  borderRadius:12
 }
 
 const overlay = {
   position:'fixed',
-  top:0,
-  left:0,
-  width:'100%',
-  height:'100%',
+  inset:0,
   background:'rgba(0,0,0,0.5)',
   display:'flex',
   justifyContent:'center',
@@ -417,28 +352,31 @@ const overlay = {
 
 const modal = {
   background:'white',
-  padding:20,
-  borderRadius:12,
-  width:300
+  padding:24,
+  borderRadius:16,
+  width:320,
+  display:'flex',
+  flexDirection:'column',
+  gap:10
 }
 
 const input = {
-  width:'100%',
-  marginBottom:10,
-  padding:8
+  padding:10,
+  borderRadius:8,
+  border:'1px solid #ccc'
 }
 
 const btnSave = {
-  background:'#1677ff',
+  background:'#0070f3',
   color:'white',
-  padding:10,
-  width:'100%',
+  padding:12,
   border:'none',
-  borderRadius:8
+  borderRadius:10
 }
 
 const btnClose = {
-  marginTop:10,
-  padding:8,
-  width:'100%'
+  background:'#ddd',
+  padding:12,
+  border:'none',
+  borderRadius:10
 }
