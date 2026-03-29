@@ -116,7 +116,6 @@ export default function Analiz() {
 
       <h1 style={{margin:'20px 0'}}>📊 ANALİZ PANELİ</h1>
 
-      {/* ÜST KARTLAR */}
       <div style={{
         display:'grid',
         gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',
@@ -140,7 +139,6 @@ export default function Analiz() {
 
       </div>
 
-      {/* BLOKLAR */}
       <h3 style={{marginTop:30}}>Blok Dağılımı</h3>
 
       {Object.keys(bloklar).map(b => {
@@ -175,7 +173,6 @@ export default function Analiz() {
         )
       })}
 
-      {/* 🔥 BLOK DETAY (GÜNCEL HESAPLI) */}
       {aktifBlok && (
         <div style={{
           marginTop:30,
@@ -238,13 +235,31 @@ export default function Analiz() {
 
             return (
               <div key={line} style={{
-  marginBottom:10,
-  padding:10,
-  background: guncelBoy >= 6 ? '#14532d' : '#334155',
-  borderRadius:10,
-  border: guncelBoy >= 6 ? '1px solid #22c55e' : 'none'
-}}>
-                <div><b>{line}</b></div>
+                marginBottom:10,
+                padding:10,
+                background: guncelBoy >= 6 ? '#14532d' : '#334155',
+                borderRadius:10,
+                border: guncelBoy >= 6 ? '1px solid #22c55e' : 'none'
+              }}>
+
+                {/* 🔥 SADECE BURASI EKLENDİ */}
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <b>{line}</b>
+
+                  {guncelBoy >= 6 && (
+                    <div style={{
+                      background:'#22c55e',
+                      color:'black',
+                      padding:'4px 8px',
+                      borderRadius:8,
+                      fontSize:12,
+                      fontWeight:'bold'
+                    }}>
+                      🟢 HASADA HAZIR
+                    </div>
+                  )}
+                </div>
+
                 <div>📅 {new Date(tarih).toLocaleDateString()}</div>
                 <div>🐚 {guncelKg.toFixed(0)} kg</div>
                 <div>📏 {guncelBoy.toFixed(2)} cm</div>
