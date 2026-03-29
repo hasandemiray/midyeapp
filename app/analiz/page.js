@@ -238,11 +238,12 @@ export default function Analiz() {
 
             return (
               <div key={line} style={{
-                marginBottom:10,
-                padding:10,
-                background:'#334155',
-                borderRadius:10
-              }}>
+  marginBottom:10,
+  padding:10,
+  background: guncelBoy >= 6 ? '#14532d' : '#334155',
+  borderRadius:10,
+  border: guncelBoy >= 6 ? '1px solid #22c55e' : 'none'
+}}>
                 <div><b>{line}</b></div>
                 <div>📅 {new Date(tarih).toLocaleDateString()}</div>
                 <div>🐚 {guncelKg.toFixed(0)} kg</div>
