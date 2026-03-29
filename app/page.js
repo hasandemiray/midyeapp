@@ -127,7 +127,21 @@ export default function Page() {
             borderRadius:8,
             fontWeight:'bold'
           }}
+          
         >
+          <button
+  onClick={() => router.push('/analiz')}
+  style={{
+    background:'#722ed1',
+    color:'white',
+    padding:'10px',
+    borderRadius:10,
+    fontWeight:'bold',
+    marginBottom:10
+  }}
+>
+  📊 ANALİZ
+</button>
           Çıkış
         </button>
       </div>
