@@ -9,13 +9,18 @@ export default function Hasat() {
 
   const [line, setLine] = useState('')
   const [records, setRecords] = useState([])
-  const [kg, setKg] = useState('')
-  const [kalanKg, setKalanKg] = useState(0)
-  const [toplamKg, setToplamKg] = useState(0)
+  const [hasatlar, setHasatlar] = useState([])
 
-  // 🔐 login + veri çek
+  const [hasatlikHatlar, setHasatlikHatlar] = useState([])
+  const [boylamaHatlar, setBoylamaHatlar] = useState([])
+
+  const [kg, setKg] = useState('')
+  const [toplamKg, setToplamKg] = useState(0)
+  const [kalanKg, setKalanKg] = useState(0)
+
+  // 🔐 LOGIN + VERİ ÇEK
   useEffect(() => {
-    const checkUser = async () => {
+    const loadData = async () => {
 
       const { data: userData } = await supabase.auth.getUser()
 
@@ -24,17 +29,87 @@ export default function Hasat() {
         return
       }
 
+      // 🔥 BURASI ÖNEMLİ (records burada geliyor)
       const { data: recordsData } = await supabase
         .from('records')
         .select('*')
 
       setRecords(recordsData || [])
+
+      const { data: hasatData } = await supabase
+        .from('hasat')
+        .select('*')
+
+      setHasatlar(hasatData || [])
     }
 
-    checkUser()
+    loadData()
   }, [])
 
-  // 🔥 DETAY SAYFASI MANTIĞI AYNI (TEK YERDEN)
+  // 🔥 HATLARI AYIR (HASATLIK / BOYLAMA)
+  useEffect(() => {
+
+    if (!records.length) return
+
+    const hatlar = {}
+
+    records.forEach(r => {
+      if (!hatlar[r.line]) hatlar[r.line] = []
+      hatlar[r.line].push(r)
+    })
+
+    const hasatList = []
+    const boylamaList = []
+
+    Object.keys(hatlar).forEach(line => {
+
+      const sirali = [...hatlar[line]].sort(
+        (a, b) => new Date(a.tarih) - new Date(b.tarih)
+      )
+
+      let enBuyukBoy = 0
+
+      sirali.forEach(r => {
+
+        const ekimTarihi = new Date(r.tarih)
+        const bugun = new Date()
+
+        const gun = Math.floor(
+          (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
+        )
+
+        let buyume = 0
+
+        if (gun > 15) {
+          const ay = (gun - 15) / 30
+          const ayNum = new Date().getMonth() + 1
+
+          buyume = (ayNum >= 6 && ayNum <= 11)
+            ? ay * 0.3
+            : ay * 0.5
+        }
+
+        const boy = (r.cm || 0) + buyume
+
+        if (boy > enBuyukBoy) {
+          enBuyukBoy = boy
+        }
+      })
+
+      if (enBuyukBoy >= 6) {
+        hasatList.push(line)
+      } else {
+        boylamaList.push(line)
+      }
+
+    })
+
+    setHasatlikHatlar(hasatList)
+    setBoylamaHatlar(boylamaList)
+
+  }, [records])
+
+  // 🔥 KG HESAP (HASAT DÜŞÜLÜYOR)
   useEffect(() => {
 
     if (!line) return
@@ -70,11 +145,21 @@ export default function Hasat() {
       guncelKg += kgDeger * hatMetre
     })
 
-    setToplamKg(guncelKg)
+    // 🔥 HASAT DÜŞ
+    const ilgiliHasatlar = hasatlar.filter(h => h.line === line)
 
-  }, [line, records])
+    const toplamHasat = ilgiliHasatlar.reduce(
+      (acc, h) => acc + (parseFloat(h.kg) || 0),
+      0
+    )
 
-  // 🔥 KALAN HESAP
+    const kalan = guncelKg - toplamHasat
+
+    setToplamKg(kalan < 0 ? 0 : kalan)
+
+  }, [line, records, hasatlar])
+
+  // 🔥 INPUT YAZARKEN KALAN GÖSTER
   useEffect(() => {
     if (kg !== '') {
       setKalanKg(toplamKg - (parseFloat(kg) || 0))
@@ -85,11 +170,17 @@ export default function Hasat() {
   const handleSave = async () => {
 
     if (!line) return alert("Hat seç")
+    if (!kg || kg <= 0) return alert("Geçerli KG gir")
 
-    await supabase.from('hasat').insert([{
+    const yeni = {
       line,
       kg: parseFloat(kg) || 0
-    }])
+    }
+
+    await supabase.from('hasat').insert([yeni])
+
+    setHasatlar(prev => [...prev, yeni])
+    setKg('')
 
     alert("Hasat kaydedildi")
   }
@@ -101,16 +192,23 @@ export default function Hasat() {
 
       <h1>HASAT PANELİ</h1>
 
-      {/* HAT SEÇ */}
+      {/* 🔥 HAT SEÇ */}
       <select onChange={e=>setLine(e.target.value)}>
+
         <option value="">Hat seç</option>
 
-        {['A','B','C','D','E','F'].map(b =>
-          [...Array(15)].map((_,i)=> {
-            const hat = b + (i+1)
-            return <option key={hat}>{hat}</option>
-          })
-        )}
+        <optgroup label="Hasata Gidecek Hatlar">
+          {hasatlikHatlar.map(hat => (
+            <option key={hat}>{hat}</option>
+          ))}
+        </optgroup>
+
+        <optgroup label="Boylama Yapılacak Hatlar">
+          {boylamaHatlar.map(hat => (
+            <option key={hat}>{hat}</option>
+          ))}
+        </optgroup>
+
       </select>
 
       <hr />
@@ -121,6 +219,7 @@ export default function Hasat() {
         <>
           <input
             placeholder="Hasat KG"
+            value={kg}
             onChange={e=>setKg(e.target.value)}
           />
 
@@ -130,6 +229,17 @@ export default function Hasat() {
 
           <h3>Hasat Edilen: {kg || 0}</h3>
           <h3>Kalan KG: {kalanKg.toFixed(2)}</h3>
+
+          {/* 🔥 GEÇMİŞ HASATLAR */}
+          <h3>Geçmiş Hasatlar</h3>
+
+          {hasatlar
+            .filter(h => h.line === line)
+            .map((h, i) => (
+              <div key={i}>
+                {h.kg} kg
+              </div>
+            ))}
         </>
       )}
 
