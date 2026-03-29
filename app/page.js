@@ -86,7 +86,7 @@ export default function Page() {
   return (
     <div style={container}>
 
-      {/* ÜST BAR (DEĞİŞMEDİ) */}
+      {/* ÜST BAR (AYNI) */}
       <div style={{
         display:'flex',
         justifyContent:'space-between',
@@ -154,7 +154,7 @@ export default function Page() {
         ))}
       </div>
 
-      {/* 🔥 ANALİZ BUTONU (EKLENEN TEK ŞEY) */}
+      {/* 🔥 SADECE EKLENEN */}
       <div style={{marginBottom:20}}>
         <button
           onClick={() => router.push('/analiz')}
@@ -173,7 +173,7 @@ export default function Page() {
         </button>
       </div>
 
-      {/* GRID */}
+      {/* GRID (ORİJİNAL HALİ) */}
       {block && (
         <div style={grid}>
           {[...Array(15)].map((_, i) => {
@@ -208,15 +208,68 @@ export default function Page() {
 
             return (
               <div key={i} style={card} onClick={()=>setSelectedLine(hat)}>
+
                 <div>
                   <div style={hatTitle}>{hat}</div>
                   <div style={hatInfo}>
                     {durum} {boy.toFixed(2)} cm
                   </div>
                 </div>
+
+                {/* 🔥 ORİJİNAL BUTONLAR GERİ GELDİ */}
+                <div style={cardButtons}>
+                  <button
+                    onClick={(e)=>{
+                      e.stopPropagation()
+                      router.push(`/hat/${hat}`)
+                    }}
+                    style={btnDetail}
+                  >
+                    Detay
+                  </button>
+
+                  <button
+                    onClick={(e)=>{
+                      e.stopPropagation()
+                      setDeleteTarget(hat)
+                    }}
+                    style={btnDelete}
+                  >
+                    🗑️
+                  </button>
+                </div>
+
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* MODAL */}
+      {selectedLine && (
+        <div style={overlay}>
+          <div style={modal}>
+            <h2>{selectedLine} Ekim</h2>
+
+            <input placeholder="Ara" value={ara} onChange={e=>setAra(e.target.value)} style={input}/>
+            <input placeholder="KG" value={kg} onChange={e=>setKg(e.target.value)} style={input}/>
+            <input placeholder="CM" value={cm} onChange={e=>setCm(e.target.value)} style={input}/>
+            <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} style={input}/>
+
+            <button style={btnSave} onClick={handleSave}>Kaydet</button>
+            <button style={btnClose} onClick={()=>setSelectedLine(null)}>Kapat</button>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE */}
+      {deleteTarget && (
+        <div style={overlay}>
+          <div style={modal}>
+            <h3>{deleteTarget} silinsin mi?</h3>
+            <button onClick={confirmDelete} style={btnDelete}>Evet</button>
+            <button onClick={()=>setDeleteTarget(null)}>Vazgeç</button>
+          </div>
         </div>
       )}
 
@@ -224,7 +277,7 @@ export default function Page() {
   )
 }
 
-/* STYLES AYNI */
+/* STYLES (AYNI) */
 const container = {
   padding:20,
   background:'#f0f2f5',
@@ -258,8 +311,72 @@ const card = {
   background:'white',
   padding:24,
   borderRadius:18,
-  boxShadow:'0 8px 18px rgba(0,0,0,0.15)'
+  boxShadow:'0 8px 18px rgba(0,0,0,0.15)',
+  display:'flex',
+  flexDirection:'column',
+  gap:18,
+  cursor:'pointer'
 }
 
 const hatTitle = { fontSize:24, fontWeight:'bold' }
 const hatInfo = { fontSize:18 }
+
+const cardButtons = { display:'flex', gap:12 }
+
+const btnDetail = {
+  flex:2,
+  background:'#333',
+  color:'white',
+  border:'none',
+  padding:'14px',
+  borderRadius:12
+}
+
+const btnDelete = {
+  flex:1,
+  background:'red',
+  color:'white',
+  border:'none',
+  padding:'14px',
+  borderRadius:12
+}
+
+const overlay = {
+  position:'fixed',
+  inset:0,
+  background:'rgba(0,0,0,0.5)',
+  display:'flex',
+  justifyContent:'center',
+  alignItems:'center'
+}
+
+const modal = {
+  background:'white',
+  padding:24,
+  borderRadius:16,
+  width:320,
+  display:'flex',
+  flexDirection:'column',
+  gap:10
+}
+
+const input = {
+  padding:10,
+  borderRadius:8,
+  border:'1px solid #ccc'
+}
+
+const btnSave = {
+  background:'#0070f3',
+  color:'white',
+  padding:12,
+  border:'none',
+  borderRadius:10
+}
+
+const btnClose = {
+  background:'#ddd',
+  padding:12,
+  border:'none',
+  borderRadius:10
+}
