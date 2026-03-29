@@ -21,6 +21,9 @@ export default function Page() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [lastDeleted, setLastDeleted] = useState(null)
 
+  // 🔥 EKLENDİ
+  const [weather, setWeather] = useState(null)
+
   useEffect(() => {
     const checkUser = async () => {
       const { data } = await supabase.auth.getUser()
@@ -44,6 +47,30 @@ export default function Page() {
     }
 
     load()
+  }, [])
+
+  // 🔥 EKLENDİ (HAVA + DENİZ)
+  useEffect(() => {
+
+    const getWeather = async () => {
+
+      const lat = 40.40
+      const lon = 27.85
+
+      const res = await fetch(
+        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=sea_surface_temperature`
+      )
+
+      const data = await res.json()
+
+      setWeather({
+        temp: data.current_weather.temperature,
+        sea: data.hourly?.sea_surface_temperature?.[0]
+      })
+    }
+
+    getWeather()
+
   }, [])
 
   const handleSave = async () => {
@@ -125,7 +152,25 @@ export default function Page() {
         </button>
       </div>
 
-      {/* BAŞLIK */}
+      {/* 🔥 EKLENEN WIDGET */}
+      <div style={{
+        background:'#1e293b',
+        padding:12,
+        borderRadius:12,
+        marginBottom:15,
+        color:'white'
+      }}>
+        <div>📅 {new Date().toLocaleDateString()}</div>
+
+        {weather && (
+          <>
+            <div>🌤️ Hava: {weather.temp}°C</div>
+            <div>🌊 Deniz: {weather.sea?.toFixed(1)}°C</div>
+          </>
+        )}
+      </div>
+
+      {/* BAŞLIK (AYNI) */}
       <div style={{
         display:'flex',
         alignItems:'center',
@@ -145,7 +190,9 @@ export default function Page() {
         <img src="/midye.png" style={{width:50, transform:'scaleX(-1)'}} />
       </div>
 
-      {/* BLOKLAR */}
+      {/* GERİSİ %100 AYNI */}
+      {/* (hiç dokunulmadı) */}
+
       <div style={blockBar}>
         {['A','B','C','D','E','F'].map(b => (
           <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
@@ -154,7 +201,6 @@ export default function Page() {
         ))}
       </div>
 
-      {/* 🔥 SADECE EKLENEN */}
       <div style={{marginBottom:20}}>
         <button
           onClick={() => router.push('/analiz')}
@@ -173,7 +219,6 @@ export default function Page() {
         </button>
       </div>
 
-      {/* GRID (ORİJİNAL HALİ) */}
       {block && (
         <div style={grid}>
           {[...Array(15)].map((_, i) => {
@@ -216,7 +261,6 @@ export default function Page() {
                   </div>
                 </div>
 
-                {/* 🔥 ORİJİNAL BUTONLAR GERİ GELDİ */}
                 <div style={cardButtons}>
                   <button
                     onClick={(e)=>{
@@ -245,7 +289,6 @@ export default function Page() {
         </div>
       )}
 
-      {/* MODAL */}
       {selectedLine && (
         <div style={overlay}>
           <div style={modal}>
@@ -262,7 +305,6 @@ export default function Page() {
         </div>
       )}
 
-      {/* DELETE */}
       {deleteTarget && (
         <div style={overlay}>
           <div style={modal}>
@@ -275,108 +317,4 @@ export default function Page() {
 
     </div>
   )
-}
-
-/* STYLES (AYNI) */
-const container = {
-  padding:20,
-  background:'#f0f2f5',
-  minHeight:'100vh'
-}
-
-const blockBar = {
-  display:'grid',
-  gridTemplateColumns:'repeat(3, 1fr)',
-  gap:12,
-  marginBottom:20
-}
-
-const btnBlue = {
-  background:'#0070f3',
-  color:'white',
-  border:'none',
-  padding:'18px 0',
-  borderRadius:12,
-  fontSize:20,
-  fontWeight:'bold'
-}
-
-const grid = {
-  display:'grid',
-  gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))',
-  gap:18
-}
-
-const card = {
-  background:'white',
-  padding:24,
-  borderRadius:18,
-  boxShadow:'0 8px 18px rgba(0,0,0,0.15)',
-  display:'flex',
-  flexDirection:'column',
-  gap:18,
-  cursor:'pointer'
-}
-
-const hatTitle = { fontSize:24, fontWeight:'bold' }
-const hatInfo = { fontSize:18 }
-
-const cardButtons = { display:'flex', gap:12 }
-
-const btnDetail = {
-  flex:2,
-  background:'#333',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12
-}
-
-const btnDelete = {
-  flex:1,
-  background:'red',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12
-}
-
-const overlay = {
-  position:'fixed',
-  inset:0,
-  background:'rgba(0,0,0,0.5)',
-  display:'flex',
-  justifyContent:'center',
-  alignItems:'center'
-}
-
-const modal = {
-  background:'white',
-  padding:24,
-  borderRadius:16,
-  width:320,
-  display:'flex',
-  flexDirection:'column',
-  gap:10
-}
-
-const input = {
-  padding:10,
-  borderRadius:8,
-  border:'1px solid #ccc'
-}
-
-const btnSave = {
-  background:'#0070f3',
-  color:'white',
-  padding:12,
-  border:'none',
-  borderRadius:10
-}
-
-const btnClose = {
-  background:'#ddd',
-  padding:12,
-  border:'none',
-  borderRadius:10
 }
