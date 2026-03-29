@@ -8,22 +8,16 @@ export default function Analiz() {
   const router = useRouter()
 
   const [records, setRecords] = useState([])
-  const [toplamKg, setToplamKg] = useState(0)
   const [bloklar, setBloklar] = useState({})
-  const [hasatlikHatlar, setHasatlikHatlar] = useState([])
-  const [hasatlikKg, setHasatlikKg] = useState(0)
+  const [toplamKg, setToplamKg] = useState(0)
+  const [hasatHatSayisi, setHasatHatSayisi] = useState(0)
+  const [hasatKg, setHasatKg] = useState(0)
 
   useEffect(() => {
-
     const load = async () => {
-
-      const { data } = await supabase
-        .from('records')
-        .select('*')
-
+      const { data } = await supabase.from('records').select('*')
       setRecords(data || [])
     }
-
     load()
   }, [])
 
@@ -33,8 +27,8 @@ export default function Analiz() {
 
     let toplam = 0
     let blokData = {}
-    let hasatHat = []
-    let hasatKg = 0
+    let hasatCount = 0
+    let hasatToplamKg = 0
 
     const hatlar = {}
 
@@ -73,7 +67,6 @@ export default function Analiz() {
         }
 
         const boy = (r.cm || 0) + buyume
-
         if (boy > enBuyukBoy) enBuyukBoy = boy
 
         const halat = 56
@@ -90,46 +83,111 @@ export default function Analiz() {
       toplam += guncelKg
 
       const blok = line.charAt(0)
-
       if (!blokData[blok]) blokData[blok] = 0
       blokData[blok] += guncelKg
 
       if (enBuyukBoy >= 6) {
-        hasatHat.push(line)
-        hasatKg += guncelKg
+        hasatCount++
+        hasatToplamKg += guncelKg
       }
 
     })
 
     setToplamKg(toplam)
     setBloklar(blokData)
-    setHasatlikHatlar(hasatHat)
-    setHasatlikKg(hasatKg)
+    setHasatHatSayisi(hasatCount)
+    setHasatKg(hasatToplamKg)
 
   }, [records])
 
   return (
-    <div style={{ padding:20 }}>
+    <div style={{padding:20, background:'#0f172a', minHeight:'100vh', color:'white'}}>
 
-      <button onClick={()=>router.push('/')}>← ANASAYFA</button>
+      <button onClick={()=>router.push('/')} style={{
+        background:'#334155',
+        color:'white',
+        padding:'8px 12px',
+        borderRadius:8,
+        border:'none'
+      }}>
+        ← Anasayfa
+      </button>
 
-      <h1>📊 ANALİZ PANELİ</h1>
+      <h1 style={{margin:'20px 0'}}>📊 ANALİZ PANELİ</h1>
 
-      <h2>🏭 Tesis Toplam: {toplamKg.toFixed(2)} kg</h2>
+      {/* 🔥 ÜST KARTLAR */}
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',
+        gap:15
+      }}>
 
-      <h3>Bloklar:</h3>
-      {Object.keys(bloklar).map(b => (
-        <div key={b}>
-          {b} Blok: {bloklar[b].toFixed(2)} kg
+        <div style={cardPurple}>
+          <div>🏭 Tesis</div>
+          <h2>{toplamKg.toFixed(0)} kg</h2>
         </div>
-      ))}
 
-      <h3>🟢 Hasada Hazır Hatlar:</h3>
-      <div>{hasatlikHatlar.join(', ')}</div>
+        <div style={cardGreen}>
+          <div>🟢 Hasatlık Hat</div>
+          <h2>{hasatHatSayisi}</h2>
+        </div>
 
-      <h3>📦 Hasat Edilebilir KG:</h3>
-      <div>{hasatlikKg.toFixed(2)} kg</div>
+        <div style={cardBlue}>
+          <div>📦 Hasat KG</div>
+          <h2>{hasatKg.toFixed(0)} kg</h2>
+        </div>
+
+      </div>
+
+      {/* 🔥 BLOKLAR */}
+      <h3 style={{marginTop:30}}>Blok Dağılımı</h3>
+
+      {Object.keys(bloklar).map(b => {
+        const yuzde = (bloklar[b] / toplamKg) * 100
+
+        return (
+          <div key={b} style={{marginBottom:15}}>
+
+            <div style={{display:'flex', justifyContent:'space-between'}}>
+              <span>{b} Blok</span>
+              <span>{bloklar[b].toFixed(0)} kg</span>
+            </div>
+
+            <div style={{
+              background:'#1e293b',
+              height:12,
+              borderRadius:10,
+              overflow:'hidden'
+            }}>
+              <div style={{
+                width:`${yuzde}%`,
+                height:'100%',
+                background:'linear-gradient(90deg,#22c55e,#06b6d4)'
+              }}/>
+            </div>
+
+          </div>
+        )
+      })}
 
     </div>
   )
+}
+
+const cardPurple = {
+  background:'linear-gradient(135deg,#7c3aed,#9333ea)',
+  padding:20,
+  borderRadius:15
+}
+
+const cardGreen = {
+  background:'linear-gradient(135deg,#16a34a,#22c55e)',
+  padding:20,
+  borderRadius:15
+}
+
+const cardBlue = {
+  background:'linear-gradient(135deg,#2563eb,#06b6d4)',
+  padding:20,
+  borderRadius:15
 }
