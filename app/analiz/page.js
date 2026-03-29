@@ -13,6 +13,9 @@ export default function Analiz() {
   const [hasatHatSayisi, setHasatHatSayisi] = useState(0)
   const [hasatKg, setHasatKg] = useState(0)
 
+  // 🔥 YENİ
+  const [aktifBlok, setAktifBlok] = useState(null)
+
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.from('records').select('*')
@@ -146,7 +149,14 @@ export default function Analiz() {
         const yuzde = (bloklar[b] / toplamKg) * 100
 
         return (
-          <div key={b} style={{marginBottom:15}}>
+          <div
+            key={b}
+            onClick={() => setAktifBlok(b)}
+            style={{
+              marginBottom:15,
+              cursor:'pointer'
+            }}
+          >
 
             <div style={{display:'flex', justifyContent:'space-between'}}>
               <span>{b} Blok</span>
@@ -169,6 +179,51 @@ export default function Analiz() {
           </div>
         )
       })}
+
+      {/* 🔥 BLOK DETAY */}
+      {aktifBlok && (
+        <div style={{
+          marginTop:30,
+          background:'#1e293b',
+          padding:20,
+          borderRadius:15
+        }}>
+
+          <h3>📊 {aktifBlok} BLOK DETAY</h3>
+
+          {Object.keys(records.reduce((acc, r) => {
+            if (r.line.startsWith(aktifBlok)) {
+              if (!acc[r.line]) acc[r.line] = []
+              acc[r.line].push(r)
+            }
+            return acc
+          }, {})).map(line => {
+
+            const hatKayit = records.filter(r => r.line === line)
+
+            let kgToplam = 0
+            let boy = 0
+
+            hatKayit.forEach(r => {
+              kgToplam += parseFloat(r.kg) || 0
+              boy = r.cm || 0
+            })
+
+            return (
+              <div key={line} style={{
+                marginBottom:10,
+                padding:10,
+                background:'#334155',
+                borderRadius:10
+              }}>
+                <b>{line}</b> → {kgToplam.toFixed(0)} kg / {boy.toFixed(1)} cm
+              </div>
+            )
+
+          })}
+
+        </div>
+      )}
 
     </div>
   )
