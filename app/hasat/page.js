@@ -173,7 +173,7 @@ export default function Hasat() {
     const yeni = {
       line,
       kg: parseFloat(kg) || 0,
-      tarih: new Date().toISOString() // 🔥 EKLENDİ
+      tarih: new Date().toISOString()
     }
 
     await supabase.from('hasat').insert([yeni])
@@ -182,6 +182,20 @@ export default function Hasat() {
     setKg('')
 
     alert("Hasat kaydedildi")
+  }
+
+  // 🗑️ SİL
+  const deleteHasat = async (id) => {
+
+    const confirmDelete = confirm("Silinsin mi?")
+    if (!confirmDelete) return
+
+    await supabase
+      .from('hasat')
+      .delete()
+      .eq('id', id)
+
+    setHasatlar(prev => prev.filter(h => h.id !== id))
   }
 
   return (
@@ -226,7 +240,6 @@ export default function Hasat() {
           <h3>Hasat Edilen: {kg || 0}</h3>
           <h3>Kalan KG: {kalanKg.toFixed(2)}</h3>
 
-          {/* 🔥 GELİŞTİRİLMİŞ GEÇMİŞ */}
           <h3>Geçmiş Hasatlar</h3>
 
           {hasatlar
@@ -241,13 +254,33 @@ export default function Hasat() {
                 0
               )
 
-              const kalan = toplamKg - toplamHasat
+              const kalan = Math.max(0, toplamKg - toplamHasat)
 
               return (
-                <div key={i} style={{marginBottom:10}}>
+                <div key={h.id} style={{
+                  marginBottom:10,
+                  padding:10,
+                  border:'1px solid #ddd',
+                  borderRadius:8
+                }}>
                   <div>📅 {new Date(h.tarih).toLocaleDateString()}</div>
                   <div>🐚 {h.kg} kg</div>
                   <div>📦 Kalan: {kalan.toFixed(2)} kg</div>
+
+                  <button
+                    onClick={() => deleteHasat(h.id)}
+                    style={{
+                      marginTop:5,
+                      background:'red',
+                      color:'white',
+                      border:'none',
+                      padding:'4px 8px',
+                      borderRadius:6,
+                      cursor:'pointer'
+                    }}
+                  >
+                    🗑️ Sil
+                  </button>
                 </div>
               )
             })}
