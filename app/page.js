@@ -21,7 +21,6 @@ export default function Page() {
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [lastDeleted, setLastDeleted] = useState(null)
 
-  // 🔥 EKLENDİ
   const [weather, setWeather] = useState(null)
 
   useEffect(() => {
@@ -49,26 +48,30 @@ export default function Page() {
     load()
   }, [])
 
-  // 🔥 EKLENDİ (HAVA + DENİZ)
+  // 🔥 HAVA + DENİZ (FIXLİ)
   useEffect(() => {
 
     const getWeather = async () => {
+      try {
+        const lat = 40.40
+        const lon = 27.85
 
-      const lat = 40.40
-      const lon = 27.85
+        const res = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=sea_surface_temperature`
+        )
 
-      const res = await fetch(
-        `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&hourly=sea_surface_temperature`
-      )
+        const data = await res.json()
 
-      const data = await res.json()
+        if (!data?.current_weather) return
 
-      if (!data || !data.current_weather) return
+        setWeather({
+          temp: data.current_weather.temperature,
+          sea: data.hourly?.sea_surface_temperature?.[0]
+        })
 
-setWeather({
-  temp: data.current_weather.temperature,
-  sea: data.hourly?.sea_surface_temperature?.[0]
-})
+      } catch (err) {
+        console.log("weather error", err)
+      }
     }
 
     getWeather()
@@ -115,7 +118,6 @@ setWeather({
   return (
     <div style={container}>
 
-      {/* ÜST BAR (AYNI) */}
       <div style={{
         display:'flex',
         justifyContent:'space-between',
@@ -154,7 +156,7 @@ setWeather({
         </button>
       </div>
 
-      {/* 🔥 EKLENEN WIDGET */}
+      {/* 🔥 WEATHER */}
       <div style={{
         background:'#1e293b',
         padding:12,
@@ -172,7 +174,6 @@ setWeather({
         )}
       </div>
 
-      {/* BAŞLIK (AYNI) */}
       <div style={{
         display:'flex',
         alignItems:'center',
@@ -191,9 +192,6 @@ setWeather({
 
         <img src="/midye.png" style={{width:50, transform:'scaleX(-1)'}} />
       </div>
-
-      {/* GERİSİ %100 AYNI */}
-      {/* (hiç dokunulmadı) */}
 
       <div style={blockBar}>
         {['A','B','C','D','E','F'].map(b => (
@@ -319,4 +317,113 @@ setWeather({
 
     </div>
   )
+}
+
+/* 🔥 SADECE STYLE EKLENDİ */
+
+const container = {
+  padding:20,
+  background:'#f0f2f5',
+  minHeight:'100vh'
+}
+
+const blockBar = {
+  display:'grid',
+  gridTemplateColumns:'repeat(3,1fr)',
+  gap:10,
+  marginBottom:20
+}
+
+const btnBlue = {
+  background:'#1677ff',
+  color:'white',
+  padding:'14px',
+  border:'none',
+  borderRadius:10,
+  fontWeight:'bold'
+}
+
+const grid = {
+  display:'grid',
+  gridTemplateColumns:'repeat(auto-fill,minmax(150px,1fr))',
+  gap:15
+}
+
+const card = {
+  background:'white',
+  padding:15,
+  borderRadius:12,
+  display:'flex',
+  justifyContent:'space-between',
+  alignItems:'center'
+}
+
+const hatTitle = {
+  fontWeight:'bold',
+  fontSize:18
+}
+
+const hatInfo = {
+  fontSize:14
+}
+
+const cardButtons = {
+  display:'flex',
+  gap:5
+}
+
+const btnDetail = {
+  background:'#52c41a',
+  color:'white',
+  border:'none',
+  padding:'6px 8px',
+  borderRadius:6
+}
+
+const btnDelete = {
+  background:'#ff4d4f',
+  color:'white',
+  border:'none',
+  padding:'6px 8px',
+  borderRadius:6
+}
+
+const overlay = {
+  position:'fixed',
+  top:0,
+  left:0,
+  width:'100%',
+  height:'100%',
+  background:'rgba(0,0,0,0.5)',
+  display:'flex',
+  justifyContent:'center',
+  alignItems:'center'
+}
+
+const modal = {
+  background:'white',
+  padding:20,
+  borderRadius:12,
+  width:300
+}
+
+const input = {
+  width:'100%',
+  marginBottom:10,
+  padding:8
+}
+
+const btnSave = {
+  background:'#1677ff',
+  color:'white',
+  padding:10,
+  width:'100%',
+  border:'none',
+  borderRadius:8
+}
+
+const btnClose = {
+  marginTop:10,
+  padding:8,
+  width:'100%'
 }
