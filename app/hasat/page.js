@@ -18,7 +18,7 @@ export default function Hasat() {
   const [toplamKg, setToplamKg] = useState(0)
   const [kalanKg, setKalanKg] = useState(0)
 
-  // 🔐 LOGIN + VERİ ÇEK
+  // 🔐 LOGIN + VERİ
   useEffect(() => {
     const loadData = async () => {
 
@@ -29,7 +29,6 @@ export default function Hasat() {
         return
       }
 
-      // 🔥 BURASI ÖNEMLİ (records burada geliyor)
       const { data: recordsData } = await supabase
         .from('records')
         .select('*')
@@ -46,7 +45,7 @@ export default function Hasat() {
     loadData()
   }, [])
 
-  // 🔥 HATLARI AYIR (HASATLIK / BOYLAMA)
+  // 🔥 HATLARI AYIR
   useEffect(() => {
 
     if (!records.length) return
@@ -109,7 +108,7 @@ export default function Hasat() {
 
   }, [records])
 
-  // 🔥 KG HESAP (HASAT DÜŞÜLÜYOR)
+  // 🔥 KG HESAP
   useEffect(() => {
 
     if (!line) return
@@ -145,7 +144,6 @@ export default function Hasat() {
       guncelKg += kgDeger * hatMetre
     })
 
-    // 🔥 HASAT DÜŞ
     const ilgiliHasatlar = hasatlar.filter(h => h.line === line)
 
     const toplamHasat = ilgiliHasatlar.reduce(
@@ -159,7 +157,7 @@ export default function Hasat() {
 
   }, [line, records, hasatlar])
 
-  // 🔥 INPUT YAZARKEN KALAN GÖSTER
+  // 🔥 INPUTTA KALAN GÖSTER
   useEffect(() => {
     if (kg !== '') {
       setKalanKg(toplamKg - (parseFloat(kg) || 0))
@@ -174,7 +172,8 @@ export default function Hasat() {
 
     const yeni = {
       line,
-      kg: parseFloat(kg) || 0
+      kg: parseFloat(kg) || 0,
+      tarih: new Date().toISOString() // 🔥 EKLENDİ
     }
 
     await supabase.from('hasat').insert([yeni])
@@ -192,9 +191,7 @@ export default function Hasat() {
 
       <h1>HASAT PANELİ</h1>
 
-      {/* 🔥 HAT SEÇ */}
       <select onChange={e=>setLine(e.target.value)}>
-
         <option value="">Hat seç</option>
 
         <optgroup label="Hasata Gidecek Hatlar">
@@ -208,7 +205,6 @@ export default function Hasat() {
             <option key={hat}>{hat}</option>
           ))}
         </optgroup>
-
       </select>
 
       <hr />
@@ -230,16 +226,31 @@ export default function Hasat() {
           <h3>Hasat Edilen: {kg || 0}</h3>
           <h3>Kalan KG: {kalanKg.toFixed(2)}</h3>
 
-          {/* 🔥 GEÇMİŞ HASATLAR */}
+          {/* 🔥 GELİŞTİRİLMİŞ GEÇMİŞ */}
           <h3>Geçmiş Hasatlar</h3>
 
           {hasatlar
             .filter(h => h.line === line)
-            .map((h, i) => (
-              <div key={i}>
-                {h.kg} kg
-              </div>
-            ))}
+            .sort((a,b)=> new Date(a.tarih) - new Date(b.tarih))
+            .map((h, i, arr) => {
+
+              const onceki = arr.slice(0, i + 1)
+
+              const toplamHasat = onceki.reduce(
+                (acc, x) => acc + (parseFloat(x.kg) || 0),
+                0
+              )
+
+              const kalan = toplamKg - toplamHasat
+
+              return (
+                <div key={i} style={{marginBottom:10}}>
+                  <div>📅 {new Date(h.tarih).toLocaleDateString()}</div>
+                  <div>🐚 {h.kg} kg</div>
+                  <div>📦 Kalan: {kalan.toFixed(2)} kg</div>
+                </div>
+              )
+            })}
         </>
       )}
 
