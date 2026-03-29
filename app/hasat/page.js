@@ -18,6 +18,7 @@ export default function Hasat() {
   const [toplamKg, setToplamKg] = useState(0)
   const [kalanKg, setKalanKg] = useState(0)
 
+  // 🔐 LOGIN + DATA
   useEffect(() => {
     const loadData = async () => {
 
@@ -44,6 +45,7 @@ export default function Hasat() {
     loadData()
   }, [])
 
+  // 🔥 HATLARI AYIR
   useEffect(() => {
 
     if (!records.length) return
@@ -106,6 +108,7 @@ export default function Hasat() {
 
   }, [records])
 
+  // 🔥 KG HESAP
   useEffect(() => {
 
     if (!line) return
@@ -154,12 +157,14 @@ export default function Hasat() {
 
   }, [line, records, hasatlar])
 
+  // 🔥 INPUTTA KALAN
   useEffect(() => {
     if (kg !== '') {
       setKalanKg(toplamKg - (parseFloat(kg) || 0))
     }
   }, [kg, toplamKg])
 
+  // 💾 KAYDET
   const handleSave = async () => {
 
     if (!line) return alert("Hat seç")
@@ -177,6 +182,7 @@ export default function Hasat() {
     setKg('')
   }
 
+  // 🗑️ SİL
   const deleteHasat = async (id) => {
 
     const confirmDelete = confirm("Silinsin mi?")
@@ -191,9 +197,141 @@ export default function Hasat() {
   }
 
   return (
-    <div style={{ padding:20 }}>
-      <button onClick={()=>router.push('/')}>← Anasayfa</button>
-      <h1>HASAT PANELİ</h1>
+    <div style={{ padding:20, background:'#f5f5f5', minHeight:'100vh' }}>
+
+      <button
+        onClick={()=>router.push('/')}
+        style={{
+          background:'#0070f3',
+          color:'white',
+          border:'none',
+          padding:'10px 16px',
+          borderRadius:10,
+          fontWeight:'bold',
+          marginBottom:15
+        }}
+      >
+        ← Anasayfa
+      </button>
+
+      <h1 style={{ fontSize:28, fontWeight:'bold' }}>
+        🐚 HASAT PANELİ
+      </h1>
+
+      <select
+        onChange={e=>setLine(e.target.value)}
+        style={{
+          padding:10,
+          borderRadius:8,
+          border:'1px solid #ccc',
+          marginBottom:10
+        }}
+      >
+        <option value="">Hat seç</option>
+
+        <optgroup label="Hasata Gidecek Hatlar">
+          {hasatlikHatlar.map(hat => (
+            <option key={hat}>{hat}</option>
+          ))}
+        </optgroup>
+
+        <optgroup label="Boylama Yapılacak Hatlar">
+          {boylamaHatlar.map(hat => (
+            <option key={hat}>{hat}</option>
+          ))}
+        </optgroup>
+      </select>
+
+      <div style={{
+        background:'#e6f4ff',
+        padding:12,
+        borderRadius:10,
+        fontWeight:'bold'
+      }}>
+        📦 Toplam KG: {toplamKg.toFixed(2)}
+      </div>
+
+      {line && (
+        <>
+          <input
+            placeholder="Hasat KG"
+            value={kg}
+            onChange={e=>setKg(e.target.value)}
+            style={{
+              padding:10,
+              borderRadius:8,
+              border:'1px solid #ccc',
+              width:'100%',
+              marginTop:10
+            }}
+          />
+
+          <button
+            onClick={handleSave}
+            style={{
+              marginTop:10,
+              background:'green',
+              color:'white',
+              border:'none',
+              padding:'10px',
+              borderRadius:8,
+              width:'100%',
+              fontWeight:'bold'
+            }}
+          >
+            Kaydet
+          </button>
+
+          <h3>Hasat Edilen: {kg || 0}</h3>
+          <h3>Kalan KG: {kalanKg.toFixed(2)}</h3>
+
+          <h3>Geçmiş Hasatlar</h3>
+
+          {hasatlar
+            .filter(h => h.line === line)
+            .sort((a,b)=> new Date(a.tarih) - new Date(b.tarih))
+            .map((h, i, arr) => {
+
+              const onceki = arr.slice(0, i + 1)
+
+              const toplamHasat = onceki.reduce(
+                (acc, x) => acc + (parseFloat(x.kg) || 0),
+                0
+              )
+
+              const kalan = Math.max(0, toplamKg - toplamHasat)
+
+              return (
+                <div key={h.id} style={{
+                  marginBottom:12,
+                  padding:12,
+                  borderRadius:12,
+                  background:'white',
+                  boxShadow:'0 4px 10px rgba(0,0,0,0.1)'
+                }}>
+                  <div>📅 {new Date(h.tarih).toLocaleDateString()}</div>
+                  <div>🐚 {h.kg} kg</div>
+                  <div>📦 Kalan: {kalan.toFixed(2)} kg</div>
+
+                  <button
+                    onClick={() => deleteHasat(h.id)}
+                    style={{
+                      marginTop:8,
+                      background:'#ff4d4f',
+                      color:'white',
+                      border:'none',
+                      padding:'6px 10px',
+                      borderRadius:8
+                    }}
+                  >
+                    🗑️ Sil
+                  </button>
+                </div>
+              )
+            })}
+        </>
+      )}
+
     </div>
   )
 }
