@@ -14,8 +14,6 @@ export default function Analiz() {
   const [hasatKg, setHasatKg] = useState(0)
   const [aktifBlok, setAktifBlok] = useState(null)
 
-  const [showHasatList, setShowHasatList] = useState(false)
-
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.from('records').select('*')
@@ -118,23 +116,6 @@ export default function Analiz() {
 
       <h1 style={{margin:'20px 0'}}>📊 ANALİZ PANELİ</h1>
 
-      {hasatHatSayisi > 0 && (
-        <div
-          onClick={() => setShowHasatList(!showHasatList)}
-          style={{
-            background:'#facc15',
-            color:'black',
-            padding:'10px',
-            borderRadius:10,
-            marginBottom:15,
-            cursor:'pointer',
-            fontWeight:'bold'
-          }}
-        >
-          ⚠️ {hasatHatSayisi} hat hasada hazır (tıkla)
-        </div>
-      )}
-
       <div style={{
         display:'grid',
         gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',
@@ -169,6 +150,7 @@ export default function Analiz() {
             onClick={() => setAktifBlok(b)}
             style={{marginBottom:15, cursor:'pointer'}}
           >
+
             <div style={{display:'flex', justifyContent:'space-between'}}>
               <span>{b} Blok</span>
               <span>{bloklar[b].toFixed(0)} kg</span>
@@ -186,22 +168,11 @@ export default function Analiz() {
                 background:'linear-gradient(90deg,#22c55e,#06b6d4)'
               }}/>
             </div>
+
           </div>
         )
       })}
 
-      {showHasatList && (
-        <div style={{
-          marginTop:30,
-          background:'#1e293b',
-          padding:20,
-          borderRadius:15
-        }}>
-          <h3>🟢 HASADA HAZIR HATLAR</h3>
-        </div>
-      )}
-
-      {/* ✅ SADECE BURASI DOLDURULDU */}
       {aktifBlok && (
         <div style={{
           marginTop:30,
@@ -209,70 +180,93 @@ export default function Analiz() {
           padding:20,
           borderRadius:15
         }}>
+
           <h3>📊 {aktifBlok} BLOK DETAY</h3>
 
-          {(() => {
+          {Object.keys(records.reduce((acc, r) => {
+            if (r.line.startsWith(aktifBlok)) {
+              if (!acc[r.line]) acc[r.line] = []
+              acc[r.line].push(r)
+            }
+            return acc
+          }, {})).map(line => {
 
-            const hatlar = {}
+            const hatKayit = records.filter(r => r.line === line)
 
-            records.forEach(r => {
-              if (!hatlar[r.line]) hatlar[r.line] = []
-              hatlar[r.line].push(r)
+            let guncelKg = 0
+            let guncelBoy = 0
+            let tarih = null
+
+            hatKayit.forEach(r => {
+
+              const ekimTarihi = new Date(r.tarih)
+              const bugun = new Date()
+
+              const gun = Math.floor(
+                (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
+              )
+
+              let buyume = 0
+
+              if (gun > 15) {
+                const ay = (gun - 15) / 30
+                const ayNum = new Date().getMonth() + 1
+
+                buyume = (ayNum >= 6 && ayNum <= 11)
+                  ? ay * 0.3
+                  : ay * 0.5
+              }
+
+              const boy = (r.cm || 0) + buyume
+              if (boy > guncelBoy) guncelBoy = boy
+
+              const halat = 56
+              const hatMetre = (r.ara || 1) * halat
+
+              let kg = parseFloat(r.kg) || 0
+
+              if (r.cm <= 3) kg *= (4 ** (gun / 180))
+              else if (r.cm <= 4.5) kg *= (2 ** (gun / 120))
+
+              guncelKg += kg * hatMetre
+
+              if (!tarih) tarih = r.tarih
             })
 
-            return Object.keys(hatlar)
-              .filter(line => line.startsWith(aktifBlok))
-              .map(line => {
+            return (
+              <div key={line} style={{
+                marginBottom:10,
+                padding:10,
+                background: guncelBoy >= 6 ? '#14532d' : '#334155',
+                borderRadius:10,
+                border: guncelBoy >= 6 ? '1px solid #22c55e' : 'none'
+              }}>
 
-                let guncelKg = 0
-                let guncelBoy = 0
+                {/* 🔥 SADECE BURASI EKLENDİ */}
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                  <b>{line}</b>
 
-                hatlar[line].forEach(r => {
+                  {guncelBoy >= 6 && (
+                    <div style={{
+                      background:'#22c55e',
+                      color:'black',
+                      padding:'4px 8px',
+                      borderRadius:8,
+                      fontSize:12,
+                      fontWeight:'bold'
+                    }}>
+                      🟢 HASADA HAZIR
+                    </div>
+                  )}
+                </div>
 
-                  const gun = Math.floor(
-                    (new Date() - new Date(r.tarih)) / (1000*60*60*24)
-                  )
+                <div>📅 {new Date(tarih).toLocaleDateString()}</div>
+                <div>🐚 {guncelKg.toFixed(0)} kg</div>
+                <div>📏 {guncelBoy.toFixed(2)} cm</div>
+              </div>
+            )
 
-                  let buyume = 0
-
-                  if (gun > 15) {
-                    const ay = (gun - 15)/30
-                    const ayNum = new Date().getMonth()+1
-
-                    buyume = (ayNum >= 6 && ayNum <= 11)
-                      ? ay * 0.3
-                      : ay * 0.5
-                  }
-
-                  const boy = (r.cm || 0) + buyume
-                  if (boy > guncelBoy) guncelBoy = boy
-
-                  const halat = 56
-                  const hatMetre = (r.ara || 1) * halat
-
-                  let kg = parseFloat(r.kg) || 0
-
-                  if (r.cm <= 3) kg *= (4 ** (gun / 180))
-                  else if (r.cm <= 4.5) kg *= (2 ** (gun / 120))
-
-                  guncelKg += kg * hatMetre
-                })
-
-                return (
-                  <div key={line} style={{
-                    marginBottom:10,
-                    padding:10,
-                    background:'#334155',
-                    borderRadius:10
-                  }}>
-                    <b>{line}</b>
-                    <div>🐚 {guncelKg.toFixed(0)} kg</div>
-                    <div>📏 {guncelBoy.toFixed(2)} cm</div>
-                  </div>
-                )
-              })
-
-          })()}
+          })}
 
         </div>
       )}
