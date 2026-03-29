@@ -48,7 +48,7 @@ export default function Page() {
     load()
   }, [])
 
-  // 🔥 HAVA + DENİZ (FIXLİ)
+  // 🔥 HAVA + DENİZ (SADECE BU KISIM GÜNCELLENDİ)
   useEffect(() => {
 
     const getWeather = async () => {
@@ -64,9 +64,24 @@ export default function Page() {
 
         if (!data?.current_weather) return
 
+        // 🔥 SADECE BURASI DEĞİŞTİ
+        const times = data.hourly?.time || []
+        const temps = data.hourly?.sea_surface_temperature || []
+
+        const nowHour = new Date().toISOString().slice(0,13)
+
+        let seaTemp = null
+
+        for (let i = 0; i < times.length; i++) {
+          if (times[i].startsWith(nowHour)) {
+            seaTemp = temps[i]
+            break
+          }
+        }
+
         setWeather({
           temp: data.current_weather.temperature,
-          sea: data.hourly?.sea_surface_temperature?.[0]
+          sea: seaTemp
         })
 
       } catch (err) {
@@ -156,7 +171,7 @@ export default function Page() {
         </button>
       </div>
 
-      {/* 🔥 WEATHER */}
+      {/* WEATHER */}
       <div style={{
         background:'#1e293b',
         padding:12,
@@ -169,7 +184,7 @@ export default function Page() {
         {weather && (
           <>
             <div>🌤️ Hava: {weather.temp}°C</div>
-            <div>🌊 Deniz: {weather.sea?.toFixed(1)}°C</div>
+            <div>🌊 Deniz: {weather.sea ? weather.sea.toFixed(1) : '-'}°C</div>
           </>
         )}
       </div>
@@ -319,7 +334,7 @@ export default function Page() {
   )
 }
 
-/* 🔥 SADECE STYLE EKLENDİ */
+/* STYLE (DEĞİŞMEDİ) */
 
 const container = {
   padding:20,
