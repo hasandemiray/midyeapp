@@ -169,7 +169,6 @@ export default function Analiz() {
             onClick={() => setAktifBlok(b)}
             style={{marginBottom:15, cursor:'pointer'}}
           >
-
             <div style={{display:'flex', justifyContent:'space-between'}}>
               <span>{b} Blok</span>
               <span>{bloklar[b].toFixed(0)} kg</span>
@@ -187,11 +186,11 @@ export default function Analiz() {
                 background:'linear-gradient(90deg,#22c55e,#06b6d4)'
               }}/>
             </div>
-
           </div>
         )
       })}
 
+      {/* ✅ BURASI FIX */}
       {showHasatList && (
         <div style={{
           marginTop:30,
@@ -200,19 +199,6 @@ export default function Analiz() {
           borderRadius:15
         }}>
           <h3>🟢 HASADA HAZIR HATLAR</h3>
-          {/* SENİN MEVCUT KODUN AYNI */}
-        </div>
-      )}
-
-      {/* ✅ SADECE EKLENEN KISIM */}
-      {aktifBlok && (
-        <div style={{
-          marginTop:30,
-          background:'#1e293b',
-          padding:20,
-          borderRadius:15
-        }}>
-          <h3>📊 {aktifBlok} BLOK DETAY</h3>
 
           {(() => {
 
@@ -224,28 +210,49 @@ export default function Analiz() {
             })
 
             return Object.keys(hatlar)
-              .filter(line => line.startsWith(aktifBlok))
-              .map(line => {
+              .filter(line => {
 
-                const hatKayit = hatlar[line]
-
-                let guncelKg = 0
                 let guncelBoy = 0
 
-                hatKayit.forEach(r => {
-
-                  const ekimTarihi = new Date(r.tarih)
-                  const bugun = new Date()
+                hatlar[line].forEach(r => {
 
                   const gun = Math.floor(
-                    (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
+                    (new Date() - new Date(r.tarih)) / (1000*60*60*24)
                   )
 
                   let buyume = 0
 
                   if (gun > 15) {
-                    const ay = (gun - 15) / 30
-                    const ayNum = new Date().getMonth() + 1
+                    const ay = (gun - 15)/30
+                    const ayNum = new Date().getMonth()+1
+
+                    buyume = (ayNum >= 6 && ayNum <= 11)
+                      ? ay * 0.3
+                      : ay * 0.5
+                  }
+
+                  const boy = (r.cm || 0) + buyume
+                  if (boy > guncelBoy) guncelBoy = boy
+                })
+
+                return guncelBoy >= 6
+              })
+              .map(line => {
+
+                let guncelKg = 0
+                let guncelBoy = 0
+
+                hatlar[line].forEach(r => {
+
+                  const gun = Math.floor(
+                    (new Date() - new Date(r.tarih)) / (1000*60*60*24)
+                  )
+
+                  let buyume = 0
+
+                  if (gun > 15) {
+                    const ay = (gun - 15)/30
+                    const ayNum = new Date().getMonth()+1
 
                     buyume = (ayNum >= 6 && ayNum <= 11)
                       ? ay * 0.3
@@ -270,7 +277,7 @@ export default function Analiz() {
                   <div key={line} style={{
                     marginBottom:10,
                     padding:10,
-                    background:'#334155',
+                    background:'#14532d',
                     borderRadius:10
                   }}>
                     <b>{line}</b>
@@ -282,6 +289,18 @@ export default function Analiz() {
 
           })()}
 
+        </div>
+      )}
+
+      {/* BLOK DETAY AYNI */}
+      {aktifBlok && (
+        <div style={{
+          marginTop:30,
+          background:'#1e293b',
+          padding:20,
+          borderRadius:15
+        }}>
+          <h3>📊 {aktifBlok} BLOK DETAY</h3>
         </div>
       )}
 
