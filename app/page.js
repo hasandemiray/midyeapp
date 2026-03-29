@@ -91,60 +91,65 @@ export default function Page() {
   }
 
   return (
-    <div style={container}>
+    <div style={{
+  display:'flex',
+  alignItems:'center',
+  justifyContent:'space-between',
+  marginBottom:15
+}}>
 
-      {/* ÜST BAR */}
-      <div style={{
-        display:'flex',
-        justifyContent:'space-between',
-        alignItems:'center',
-        marginBottom:15
-      }}>
-        <b>👤 Hoşgeldin akana</b>
-<button
-  onClick={() => router.push('/hasat')}
-  style={{
-    background:'green',
-    color:'white',
-    padding:'10px',
-    borderRadius:10,
-    fontWeight:'bold',
-    marginBottom:10
-  }}
->
-  HASAT
-</button>
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut()
-            router.push('/login')
-          }}
-          style={{
-            background:'#ff4d4f',
-            color:'white',
-            border:'none',
-            padding:'8px 14px',
-            borderRadius:8,
-            fontWeight:'bold'
-          }}
-          
-        >
-          <button
-  onClick={() => router.push('/analiz')}
-  style={{
-    background:'#722ed1',
-    color:'white',
-    padding:'10px',
-    borderRadius:10,
-    fontWeight:'bold',
-    marginBottom:10
-  }}
->
-  📊 ANALİZ
-</button>
-          Çıkış
-        </button>
-      </div>
+  {/* SOL */}
+  <b>👤 Hoşgeldin akana</b>
+
+  {/* ORTA */}
+  <button
+    onClick={() => router.push('/hasat')}
+    style={{
+      background:'green',
+      color:'white',
+      padding:'10px 20px',
+      borderRadius:10,
+      fontWeight:'bold'
+    }}
+  >
+    HASAT
+  </button>
+
+  {/* SAĞ */}
+  <div style={{display:'flex', gap:10}}>
+
+    <button
+      onClick={() => router.push('/analiz')}
+      style={{
+        background:'#722ed1',
+        color:'white',
+        padding:'10px 14px',
+        borderRadius:10,
+        fontWeight:'bold'
+      }}
+    >
+      📊 ANALİZ
+    </button>
+
+    <button
+      onClick={async () => {
+        await supabase.auth.signOut()
+        router.push('/login')
+      }}
+      style={{
+        background:'#ff4d4f',
+        color:'white',
+        padding:'10px 14px',
+        borderRadius:10,
+        fontWeight:'bold'
+      }}
+    >
+      Çıkış
+    </button>
+
+  </div>
+
+
 
       {/* BAŞLIK */}
       <div style={{
