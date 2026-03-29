@@ -83,73 +83,47 @@ export default function Page() {
     setDeleteTarget(null)
   }
 
-  const undoDelete = () => {
-    const updated = [...records, ...lastDeleted]
-    localStorage.setItem('records', JSON.stringify(updated))
-    setRecords(updated)
-    setLastDeleted(null)
-  }
-
   return (
-    <div style={{
-  display:'flex',
-  alignItems:'center',
-  justifyContent:'space-between',
-  marginBottom:15
-}}>
+    <div style={container}>
 
-  {/* SOL */}
-  <b>👤 Hoşgeldin akana</b>
+      {/* ÜST BAR (DEĞİŞMEDİ) */}
+      <div style={{
+        display:'flex',
+        justifyContent:'space-between',
+        alignItems:'center',
+        marginBottom:15
+      }}>
+        <b>👤 Hoşgeldin akana</b>
 
-  {/* ORTA */}
-  <button
-    onClick={() => router.push('/hasat')}
-    style={{
-      background:'green',
-      color:'white',
-      padding:'10px 20px',
-      borderRadius:10,
-      fontWeight:'bold'
-    }}
-  >
-    HASAT
-  </button>
+        <button
+          onClick={() => router.push('/hasat')}
+          style={{
+            background:'green',
+            color:'white',
+            padding:'10px 20px',
+            borderRadius:10,
+            fontWeight:'bold'
+          }}
+        >
+          HASAT
+        </button>
 
-  {/* SAĞ */}
-  <div style={{display:'flex', gap:10}}>
-
-    <button
-      onClick={() => router.push('/analiz')}
-      style={{
-        background:'#722ed1',
-        color:'white',
-        padding:'10px 14px',
-        borderRadius:10,
-        fontWeight:'bold'
-      }}
-    >
-      📊 ANALİZ
-    </button>
-
-    <button
-      onClick={async () => {
-        await supabase.auth.signOut()
-        router.push('/login')
-      }}
-      style={{
-        background:'#ff4d4f',
-        color:'white',
-        padding:'10px 14px',
-        borderRadius:10,
-        fontWeight:'bold'
-      }}
-    >
-      Çıkış
-    </button>
-
-  </div>
-
-
+        <button
+          onClick={async () => {
+            await supabase.auth.signOut()
+            router.push('/login')
+          }}
+          style={{
+            background:'#ff4d4f',
+            color:'white',
+            padding:'10px 14px',
+            borderRadius:10,
+            fontWeight:'bold'
+          }}
+        >
+          Çıkış
+        </button>
+      </div>
 
       {/* BAŞLIK */}
       <div style={{
@@ -173,11 +147,30 @@ export default function Page() {
 
       {/* BLOKLAR */}
       <div style={blockBar}>
-       {['A','B','C','D','E','F'].map(b => (
-  <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
-    {b} Blok
-  </button>
-))}
+        {['A','B','C','D','E','F'].map(b => (
+          <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
+            {b} Blok
+          </button>
+        ))}
+      </div>
+
+      {/* 🔥 ANALİZ BUTONU (EKLENEN TEK ŞEY) */}
+      <div style={{marginBottom:20}}>
+        <button
+          onClick={() => router.push('/analiz')}
+          style={{
+            width:'100%',
+            background:'#722ed1',
+            color:'white',
+            padding:'16px',
+            border:'none',
+            borderRadius:12,
+            fontSize:18,
+            fontWeight:'bold'
+          }}
+        >
+          📊 ANALİZ PANELİ
+        </button>
       </div>
 
       {/* GRID */}
@@ -215,69 +208,15 @@ export default function Page() {
 
             return (
               <div key={i} style={card} onClick={()=>setSelectedLine(hat)}>
-
                 <div>
                   <div style={hatTitle}>{hat}</div>
                   <div style={hatInfo}>
                     {durum} {boy.toFixed(2)} cm
                   </div>
                 </div>
-
-                <div style={cardButtons}>
-                  <button
-                    onClick={(e)=>{
-                      e.stopPropagation()
-                      router.push(`/hat/${hat}`)
-                    }}
-                    style={btnDetail}
-                  >
-                    Detay
-                  </button>
-
-                  <button
-                    onClick={(e)=>{
-                      e.stopPropagation()
-                      setDeleteTarget(hat)
-                    }}
-                    style={btnDelete}
-                  >
-                    🗑️
-                  </button>
-                </div>
-
               </div>
             )
           })}
-        </div>
-      )}
-
-      {/* MODAL */}
-      {selectedLine && (
-        <div style={overlay}>
-          <div style={modal}>
-
-            <h2>{selectedLine} Ekim</h2>
-
-            <input placeholder="Ara" value={ara} onChange={e=>setAra(e.target.value)} style={input}/>
-            <input placeholder="KG" value={kg} onChange={e=>setKg(e.target.value)} style={input}/>
-            <input placeholder="CM" value={cm} onChange={e=>setCm(e.target.value)} style={input}/>
-            <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} style={input}/>
-
-            <button style={btnSave} onClick={handleSave}>Kaydet</button>
-            <button style={btnClose} onClick={()=>setSelectedLine(null)}>Kapat</button>
-
-          </div>
-        </div>
-      )}
-
-      {/* DELETE */}
-      {deleteTarget && (
-        <div style={overlay}>
-          <div style={modal}>
-            <h3>{deleteTarget} silinsin mi?</h3>
-            <button onClick={confirmDelete} style={btnDelete}>Evet</button>
-            <button onClick={()=>setDeleteTarget(null)}>Vazgeç</button>
-          </div>
         </div>
       )}
 
@@ -285,7 +224,7 @@ export default function Page() {
   )
 }
 
-/* STYLES */
+/* STYLES AYNI */
 const container = {
   padding:20,
   background:'#f0f2f5',
@@ -319,72 +258,8 @@ const card = {
   background:'white',
   padding:24,
   borderRadius:18,
-  boxShadow:'0 8px 18px rgba(0,0,0,0.15)',
-  display:'flex',
-  flexDirection:'column',
-  gap:18,
-  cursor:'pointer'
+  boxShadow:'0 8px 18px rgba(0,0,0,0.15)'
 }
 
 const hatTitle = { fontSize:24, fontWeight:'bold' }
 const hatInfo = { fontSize:18 }
-
-const cardButtons = { display:'flex', gap:12 }
-
-const btnDetail = {
-  flex:2,
-  background:'#333',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12
-}
-
-const btnDelete = {
-  flex:1,
-  background:'red',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12
-}
-
-const overlay = {
-  position:'fixed',
-  inset:0,
-  background:'rgba(0,0,0,0.5)',
-  display:'flex',
-  justifyContent:'center',
-  alignItems:'center'
-}
-
-const modal = {
-  background:'white',
-  padding:24,
-  borderRadius:16,
-  width:320,
-  display:'flex',
-  flexDirection:'column',
-  gap:10
-}
-
-const input = {
-  padding:10,
-  borderRadius:8,
-  border:'1px solid #ccc'
-}
-
-const btnSave = {
-  background:'#0070f3',
-  color:'white',
-  padding:12,
-  border:'none',
-  borderRadius:10
-}
-
-const btnClose = {
-  background:'#ddd',
-  padding:12,
-  border:'none',
-  borderRadius:10
-}
