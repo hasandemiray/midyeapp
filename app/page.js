@@ -63,10 +63,12 @@ export default function Page() {
 
       const data = await res.json()
 
-      setWeather({
-        temp: data.current_weather.temperature,
-        sea: data.hourly?.sea_surface_temperature?.[0]
-      })
+      if (!data || !data.current_weather) return
+
+setWeather({
+  temp: data.current_weather.temperature,
+  sea: data.hourly?.sea_surface_temperature?.[0]
+})
     }
 
     getWeather()
