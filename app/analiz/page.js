@@ -12,8 +12,6 @@ export default function Analiz() {
   const [toplamKg, setToplamKg] = useState(0)
   const [hasatHatSayisi, setHasatHatSayisi] = useState(0)
   const [hasatKg, setHasatKg] = useState(0)
-
-  // 🔥 YENİ
   const [aktifBlok, setAktifBlok] = useState(null)
 
   useEffect(() => {
@@ -118,7 +116,7 @@ export default function Analiz() {
 
       <h1 style={{margin:'20px 0'}}>📊 ANALİZ PANELİ</h1>
 
-      {/* 🔥 ÜST KARTLAR */}
+      {/* ÜST KARTLAR */}
       <div style={{
         display:'grid',
         gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',
@@ -142,7 +140,7 @@ export default function Analiz() {
 
       </div>
 
-      {/* 🔥 BLOKLAR */}
+      {/* BLOKLAR */}
       <h3 style={{marginTop:30}}>Blok Dağılımı</h3>
 
       {Object.keys(bloklar).map(b => {
@@ -152,10 +150,7 @@ export default function Analiz() {
           <div
             key={b}
             onClick={() => setAktifBlok(b)}
-            style={{
-              marginBottom:15,
-              cursor:'pointer'
-            }}
+            style={{marginBottom:15, cursor:'pointer'}}
           >
 
             <div style={{display:'flex', justifyContent:'space-between'}}>
@@ -180,7 +175,7 @@ export default function Analiz() {
         )
       })}
 
-      {/* 🔥 BLOK DETAY */}
+      {/* 🔥 BLOK DETAY (GÜNCEL HESAPLI) */}
       {aktifBlok && (
         <div style={{
           marginTop:30,
@@ -201,12 +196,44 @@ export default function Analiz() {
 
             const hatKayit = records.filter(r => r.line === line)
 
-            let kgToplam = 0
-            let boy = 0
+            let guncelKg = 0
+            let guncelBoy = 0
+            let tarih = null
 
             hatKayit.forEach(r => {
-              kgToplam += parseFloat(r.kg) || 0
-              boy = r.cm || 0
+
+              const ekimTarihi = new Date(r.tarih)
+              const bugun = new Date()
+
+              const gun = Math.floor(
+                (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
+              )
+
+              let buyume = 0
+
+              if (gun > 15) {
+                const ay = (gun - 15) / 30
+                const ayNum = new Date().getMonth() + 1
+
+                buyume = (ayNum >= 6 && ayNum <= 11)
+                  ? ay * 0.3
+                  : ay * 0.5
+              }
+
+              const boy = (r.cm || 0) + buyume
+              if (boy > guncelBoy) guncelBoy = boy
+
+              const halat = 56
+              const hatMetre = (r.ara || 1) * halat
+
+              let kg = parseFloat(r.kg) || 0
+
+              if (r.cm <= 3) kg *= (4 ** (gun / 180))
+              else if (r.cm <= 4.5) kg *= (2 ** (gun / 120))
+
+              guncelKg += kg * hatMetre
+
+              if (!tarih) tarih = r.tarih
             })
 
             return (
@@ -216,7 +243,10 @@ export default function Analiz() {
                 background:'#334155',
                 borderRadius:10
               }}>
-                <b>{line}</b> → {kgToplam.toFixed(0)} kg / {boy.toFixed(1)} cm
+                <div><b>{line}</b></div>
+                <div>📅 {new Date(tarih).toLocaleDateString()}</div>
+                <div>🐚 {guncelKg.toFixed(0)} kg</div>
+                <div>📏 {guncelBoy.toFixed(2)} cm</div>
               </div>
             )
 
