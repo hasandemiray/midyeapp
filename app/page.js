@@ -1,275 +1,306 @@
 'use client'
+import { supabase } from '../lib/supabase'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from './lib/supabase'
-import { useState, useEffect } from 'react'
 
-export default function Page() {
+export default function Analiz() {
 
   const router = useRouter()
 
-  const [block, setBlock] = useState(null)
-  const [selectedLine, setSelectedLine] = useState(null)
   const [records, setRecords] = useState([])
+  const [bloklar, setBloklar] = useState({})
+  const [toplamKg, setToplamKg] = useState(0)
+  const [hasatHatSayisi, setHasatHatSayisi] = useState(0)
+  const [hasatKg, setHasatKg] = useState(0)
+  const [aktifBlok, setAktifBlok] = useState(null)
 
-  const [ara, setAra] = useState('')
-  const [kg, setKg] = useState('')
-  const [cm, setCm] = useState('')
-  const [tarih, setTarih] = useState(
-    new Date().toISOString().split('T')[0]
-  )
-
-  const [deleteTarget, setDeleteTarget] = useState(null)
-  const [lastDeleted, setLastDeleted] = useState(null)
+  const [showHasatList, setShowHasatList] = useState(false)
 
   useEffect(() => {
-    const checkUser = async () => {
-      const { data } = await supabase.auth.getUser()
-
-      if (!data.user) {
-        router.push('/login')
-        return
-      }
-    }
-
-    checkUser()
-
     const load = async () => {
-      const { data, error } = await supabase
-        .from('records')
-        .select('*')
-
-      if (!error && data) {
-        setRecords(data)
-      }
+      const { data } = await supabase.from('records').select('*')
+      setRecords(data || [])
     }
-
     load()
   }, [])
 
-  const handleSave = async () => {
-    const yeni = {
-      line: selectedLine,
-      ara: parseFloat(ara) || 0,
-      kg: parseFloat(kg) || 0,
-      cm: parseFloat(cm) || 0,
-      tarih
-    }
+  useEffect(() => {
 
-    const { error } = await supabase
-      .from('records')
-      .insert([yeni])
+    if (!records.length) return
 
-    if (!error) {
-      setRecords(prev => [...prev, yeni])
-    }
+    let toplam = 0
+    let blokData = {}
+    let hasatCount = 0
+    let hasatToplamKg = 0
 
-    setSelectedLine(null)
-    setAra('')
-    setKg('')
-    setCm('')
-  }
+    const hatlar = {}
 
-  const confirmDelete = async () => {
-    const { error } = await supabase
-      .from('records')
-      .delete()
-      .eq('line', deleteTarget)
+    records.forEach(r => {
+      if (!hatlar[r.line]) hatlar[r.line] = []
+      hatlar[r.line].push(r)
+    })
 
-    if (!error) {
-      const kalan = records.filter(r => r.line !== deleteTarget)
-      setRecords(kalan)
-    }
+    Object.keys(hatlar).forEach(line => {
 
-    setDeleteTarget(null)
-  }
+      const sirali = [...hatlar[line]].sort(
+        (a, b) => new Date(a.tarih) - new Date(b.tarih)
+      )
+
+      let guncelKg = 0
+      let enBuyukBoy = 0
+
+      sirali.forEach(r => {
+
+        const ekimTarihi = new Date(r.tarih)
+        const bugun = new Date()
+
+        const gun = Math.floor(
+          (bugun - ekimTarihi) / (1000 * 60 * 60 * 24)
+        )
+
+        let buyume = 0
+
+        if (gun > 15) {
+          const ay = (gun - 15) / 30
+          const ayNum = new Date().getMonth() + 1
+
+          buyume = (ayNum >= 6 && ayNum <= 11)
+            ? ay * 0.3
+            : ay * 0.5
+        }
+
+        const boy = (r.cm || 0) + buyume
+        if (boy > enBuyukBoy) enBuyukBoy = boy
+
+        const halat = 56
+        const hatMetre = (r.ara || 1) * halat
+
+        let kg = parseFloat(r.kg) || 0
+
+        if (r.cm <= 3) kg *= (4 ** (gun / 180))
+        else if (r.cm <= 4.5) kg *= (2 ** (gun / 120))
+
+        guncelKg += kg * hatMetre
+      })
+
+      toplam += guncelKg
+
+      const blok = line.charAt(0)
+      if (!blokData[blok]) blokData[blok] = 0
+      blokData[blok] += guncelKg
+
+      if (enBuyukBoy >= 6) {
+        hasatCount++
+        hasatToplamKg += guncelKg
+      }
+
+    })
+
+    setToplamKg(toplam)
+    setBloklar(blokData)
+    setHasatHatSayisi(hasatCount)
+    setHasatKg(hasatToplamKg)
+
+  }, [records])
 
   return (
-    <div style={container}>
+    <div style={{padding:20, background:'#0f172a', minHeight:'100vh', color:'white'}}>
 
-      {/* ÜST BAR (AYNI) */}
-      <div style={{
-        display:'flex',
-        justifyContent:'space-between',
-        alignItems:'center',
-        marginBottom:15
+      <button onClick={()=>router.push('/')} style={{
+        background:'#334155',
+        color:'white',
+        padding:'8px 12px',
+        borderRadius:8,
+        border:'none'
       }}>
-        <b>👤 Hoşgeldin akana</b>
+        ← Anasayfa
+      </button>
 
-        <button
-          onClick={() => router.push('/hasat')}
+      <h1 style={{margin:'20px 0'}}>📊 ANALİZ PANELİ</h1>
+
+      {hasatHatSayisi > 0 && (
+        <div
+          onClick={() => setShowHasatList(!showHasatList)}
           style={{
-            background:'green',
-            color:'white',
-            padding:'10px 20px',
+            background:'#facc15',
+            color:'black',
+            padding:'10px',
             borderRadius:10,
+            marginBottom:15,
+            cursor:'pointer',
             fontWeight:'bold'
           }}
         >
-          HASAT
-        </button>
+          ⚠️ {hasatHatSayisi} hat hasada hazır (tıkla)
+        </div>
+      )}
 
-        <button
-          onClick={async () => {
-            await supabase.auth.signOut()
-            router.push('/login')
-          }}
-          style={{
-            background:'#ff4d4f',
-            color:'white',
-            padding:'10px 14px',
-            borderRadius:10,
-            fontWeight:'bold'
-          }}
-        >
-          Çıkış
-        </button>
+      <div style={{
+        display:'grid',
+        gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',
+        gap:15
+      }}>
+
+        <div style={cardPurple}>
+          <div>🏭 Tesis</div>
+          <h2>{toplamKg.toFixed(0)} kg</h2>
+        </div>
+
+        <div style={cardGreen}>
+          <div>🟢 Hasatlık Hat</div>
+          <h2>{hasatHatSayisi}</h2>
+        </div>
+
+        <div style={cardBlue}>
+          <div>📦 Hasat KG</div>
+          <h2>{hasatKg.toFixed(0)} kg</h2>
+        </div>
+
       </div>
 
-      {/* BAŞLIK */}
-      <div style={{
-        display:'flex',
-        alignItems:'center',
-        justifyContent:'center',
-        gap:12,
-        marginBottom:25
-      }}>
-        <img src="/midye.png" style={{width:50}} />
+      <h3 style={{marginTop:30}}>Blok Dağılımı</h3>
 
-        <h1 style={{
-          fontSize:30,
-          fontWeight:'bold'
+      {Object.keys(bloklar).map(b => {
+        const yuzde = (bloklar[b] / toplamKg) * 100
+
+        return (
+          <div
+            key={b}
+            onClick={() => setAktifBlok(b)}
+            style={{marginBottom:15, cursor:'pointer'}}
+          >
+            <div style={{display:'flex', justifyContent:'space-between'}}>
+              <span>{b} Blok</span>
+              <span>{bloklar[b].toFixed(0)} kg</span>
+            </div>
+
+            <div style={{
+              background:'#1e293b',
+              height:12,
+              borderRadius:10,
+              overflow:'hidden'
+            }}>
+              <div style={{
+                width:`${yuzde}%`,
+                height:'100%',
+                background:'linear-gradient(90deg,#22c55e,#06b6d4)'
+              }}/>
+            </div>
+          </div>
+        )
+      })}
+
+      {/* ✅ BURASI FIX */}
+      {showHasatList && (
+        <div style={{
+          marginTop:30,
+          background:'#1e293b',
+          padding:20,
+          borderRadius:15
         }}>
-          MİDYE TAKİP SİSTEMİ
-        </h1>
+          <h3>🟢 HASADA HAZIR HATLAR</h3>
 
-        <img src="/midye.png" style={{width:50, transform:'scaleX(-1)'}} />
-      </div>
+          {(() => {
 
-      {/* BLOKLAR */}
-      <div style={blockBar}>
-        {['A','B','C','D','E','F'].map(b => (
-          <button key={b} onClick={() => setBlock(b)} style={btnBlue}>
-            {b} Blok
-          </button>
-        ))}
-      </div>
+            const hatlar = {}
 
-      {/* 🔥 SADECE EKLENEN */}
-      <div style={{marginBottom:20}}>
-        <button
-          onClick={() => router.push('/analiz')}
-          style={{
-            width:'100%',
-            background:'#722ed1',
-            color:'white',
-            padding:'16px',
-            border:'none',
-            borderRadius:12,
-            fontSize:18,
-            fontWeight:'bold'
-          }}
-        >
-          📊 ANALİZ PANELİ
-        </button>
-      </div>
+            records.forEach(r => {
+              if (!hatlar[r.line]) hatlar[r.line] = []
+              hatlar[r.line].push(r)
+            })
 
-      {/* GRID (ORİJİNAL HALİ) */}
-      {block && (
-        <div style={grid}>
-          {[...Array(15)].map((_, i) => {
-            const hat = block + (i + 1)
-            const ilk = records.find(r => r.line === hat)
+            return Object.keys(hatlar)
+              .filter(line => {
 
-            let boy = 0
+                let guncelBoy = 0
 
-            if (ilk) {
-              const gun = Math.floor(
-                (new Date() - new Date(ilk.tarih))/(1000*60*60*24)
-              )
+                hatlar[line].forEach(r => {
 
-              let buyume = 0
+                  const gun = Math.floor(
+                    (new Date() - new Date(r.tarih)) / (1000*60*60*24)
+                  )
 
-              if (gun > 15) {
-                const ay = (gun - 15)/30
-                const ayNum = new Date().getMonth()+1
+                  let buyume = 0
 
-                buyume = (ayNum >= 6 && ayNum <= 11)
-                  ? ay * 0.3
-                  : ay * 0.5
-              }
+                  if (gun > 15) {
+                    const ay = (gun - 15)/30
+                    const ayNum = new Date().getMonth()+1
 
-              boy = (ilk.cm || 0) + buyume
-            }
+                    buyume = (ayNum >= 6 && ayNum <= 11)
+                      ? ay * 0.3
+                      : ay * 0.5
+                  }
 
-            const durum =
-              boy >= 6 ? '🟢'
-              : boy >= 5 ? '🟡'
-              : '🔴'
+                  const boy = (r.cm || 0) + buyume
+                  if (boy > guncelBoy) guncelBoy = boy
+                })
 
-            return (
-              <div key={i} style={card} onClick={()=>setSelectedLine(hat)}>
+                return guncelBoy >= 6
+              })
+              .map(line => {
 
-                <div>
-                  <div style={hatTitle}>{hat}</div>
-                  <div style={hatInfo}>
-                    {durum} {boy.toFixed(2)} cm
+                let guncelKg = 0
+                let guncelBoy = 0
+
+                hatlar[line].forEach(r => {
+
+                  const gun = Math.floor(
+                    (new Date() - new Date(r.tarih)) / (1000*60*60*24)
+                  )
+
+                  let buyume = 0
+
+                  if (gun > 15) {
+                    const ay = (gun - 15)/30
+                    const ayNum = new Date().getMonth()+1
+
+                    buyume = (ayNum >= 6 && ayNum <= 11)
+                      ? ay * 0.3
+                      : ay * 0.5
+                  }
+
+                  const boy = (r.cm || 0) + buyume
+                  if (boy > guncelBoy) guncelBoy = boy
+
+                  const halat = 56
+                  const hatMetre = (r.ara || 1) * halat
+
+                  let kg = parseFloat(r.kg) || 0
+
+                  if (r.cm <= 3) kg *= (4 ** (gun / 180))
+                  else if (r.cm <= 4.5) kg *= (2 ** (gun / 120))
+
+                  guncelKg += kg * hatMetre
+                })
+
+                return (
+                  <div key={line} style={{
+                    marginBottom:10,
+                    padding:10,
+                    background:'#14532d',
+                    borderRadius:10
+                  }}>
+                    <b>{line}</b>
+                    <div>🐚 {guncelKg.toFixed(0)} kg</div>
+                    <div>📏 {guncelBoy.toFixed(2)} cm</div>
                   </div>
-                </div>
+                )
+              })
 
-                {/* 🔥 ORİJİNAL BUTONLAR GERİ GELDİ */}
-                <div style={cardButtons}>
-                  <button
-                    onClick={(e)=>{
-                      e.stopPropagation()
-                      router.push(`/hat/${hat}`)
-                    }}
-                    style={btnDetail}
-                  >
-                    Detay
-                  </button>
+          })()}
 
-                  <button
-                    onClick={(e)=>{
-                      e.stopPropagation()
-                      setDeleteTarget(hat)
-                    }}
-                    style={btnDelete}
-                  >
-                    🗑️
-                  </button>
-                </div>
-
-              </div>
-            )
-          })}
         </div>
       )}
 
-      {/* MODAL */}
-      {selectedLine && (
-        <div style={overlay}>
-          <div style={modal}>
-            <h2>{selectedLine} Ekim</h2>
-
-            <input placeholder="Ara" value={ara} onChange={e=>setAra(e.target.value)} style={input}/>
-            <input placeholder="KG" value={kg} onChange={e=>setKg(e.target.value)} style={input}/>
-            <input placeholder="CM" value={cm} onChange={e=>setCm(e.target.value)} style={input}/>
-            <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} style={input}/>
-
-            <button style={btnSave} onClick={handleSave}>Kaydet</button>
-            <button style={btnClose} onClick={()=>setSelectedLine(null)}>Kapat</button>
-          </div>
-        </div>
-      )}
-
-      {/* DELETE */}
-      {deleteTarget && (
-        <div style={overlay}>
-          <div style={modal}>
-            <h3>{deleteTarget} silinsin mi?</h3>
-            <button onClick={confirmDelete} style={btnDelete}>Evet</button>
-            <button onClick={()=>setDeleteTarget(null)}>Vazgeç</button>
-          </div>
+      {/* BLOK DETAY AYNI */}
+      {aktifBlok && (
+        <div style={{
+          marginTop:30,
+          background:'#1e293b',
+          padding:20,
+          borderRadius:15
+        }}>
+          <h3>📊 {aktifBlok} BLOK DETAY</h3>
         </div>
       )}
 
@@ -277,106 +308,20 @@ export default function Page() {
   )
 }
 
-/* STYLES (AYNI) */
-const container = {
+const cardPurple = {
+  background:'linear-gradient(135deg,#7c3aed,#9333ea)',
   padding:20,
-  background:'#f0f2f5',
-  minHeight:'100vh'
+  borderRadius:15
 }
 
-const blockBar = {
-  display:'grid',
-  gridTemplateColumns:'repeat(3, 1fr)',
-  gap:12,
-  marginBottom:20
+const cardGreen = {
+  background:'linear-gradient(135deg,#16a34a,#22c55e)',
+  padding:20,
+  borderRadius:15
 }
 
-const btnBlue = {
-  background:'#0070f3',
-  color:'white',
-  border:'none',
-  padding:'18px 0',
-  borderRadius:12,
-  fontSize:20,
-  fontWeight:'bold'
-}
-
-const grid = {
-  display:'grid',
-  gridTemplateColumns:'repeat(auto-fit, minmax(220px, 1fr))',
-  gap:18
-}
-
-const card = {
-  background:'white',
-  padding:24,
-  borderRadius:18,
-  boxShadow:'0 8px 18px rgba(0,0,0,0.15)',
-  display:'flex',
-  flexDirection:'column',
-  gap:18,
-  cursor:'pointer'
-}
-
-const hatTitle = { fontSize:24, fontWeight:'bold' }
-const hatInfo = { fontSize:18 }
-
-const cardButtons = { display:'flex', gap:12 }
-
-const btnDetail = {
-  flex:2,
-  background:'#333',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12
-}
-
-const btnDelete = {
-  flex:1,
-  background:'red',
-  color:'white',
-  border:'none',
-  padding:'14px',
-  borderRadius:12
-}
-
-const overlay = {
-  position:'fixed',
-  inset:0,
-  background:'rgba(0,0,0,0.5)',
-  display:'flex',
-  justifyContent:'center',
-  alignItems:'center'
-}
-
-const modal = {
-  background:'white',
-  padding:24,
-  borderRadius:16,
-  width:320,
-  display:'flex',
-  flexDirection:'column',
-  gap:10
-}
-
-const input = {
-  padding:10,
-  borderRadius:8,
-  border:'1px solid #ccc'
-}
-
-const btnSave = {
-  background:'#0070f3',
-  color:'white',
-  padding:12,
-  border:'none',
-  borderRadius:10
-}
-
-const btnClose = {
-  background:'#ddd',
-  padding:12,
-  border:'none',
-  borderRadius:10
+const cardBlue = {
+  background:'linear-gradient(135deg,#2563eb,#06b6d4)',
+  padding:20,
+  borderRadius:15
 }
