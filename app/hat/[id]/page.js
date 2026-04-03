@@ -99,9 +99,9 @@ useEffect(() => {
     let kg = parseFloat(r.kg) || 0;
 
     if (r.cm <= 3) {
-      kg *= (4 ** (gun / 180));
+      kg *= (4 ** (gun / 240));
     } else if (r.cm <= 4.5) {
-      kg *= (2 ** (gun / 120));
+      kg *= (2 ** (gun / 150));
     }
 
     guncelKg += kg * hatMetre;
