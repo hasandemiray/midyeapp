@@ -1,52 +1,239 @@
 'use client';
+
 import { supabase } from '../../lib/supabase'
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
 export default function HatDetay() {
+
   const { id } = useParams();
+  const router = useRouter()
+
   const [records, setRecords] = useState([]);
   const [gecenGun, setGecenGun] = useState(0)
-  
 
-useEffect(() => {
-  const checkUser = async () => {
-    const { data } = await supabase.auth.getUser()
+  const [seciliHat, setSeciliHat] = useState(null)
 
-    if (!data.user) {
-      router.push('/login')
-      return
+  const [ara, setAra] = useState('')
+  const [kg, setKg] = useState('')
+  const [cm, setCm] = useState('')
+  const [tarih, setTarih] = useState('')
+
+  const blokMu = id.length === 1
+
+  useEffect(() => {
+    const checkUser = async () => {
+
+      const { data } = await supabase.auth.getUser()
+
+      if (!data.user) {
+        router.push('/login')
+        return
+      }
+
+      const { data: recordsData, error } = await supabase
+        .from('records')
+        .select('*')
+
+      if (!error && recordsData) {
+        setRecords(recordsData)
+      }
     }
 
-    const { data: recordsData, error } = await supabase
+    checkUser()
+  }, [])
+
+  // 🔥 KAYDET (SUPABASE)
+  const kaydet = async () => {
+
+    if (!seciliHat) return
+
+    const { error } = await supabase
       .from('records')
-      .select('*')
+      .insert([
+        {
+          line: seciliHat,
+          ara: parseFloat(ara),
+          kg: parseFloat(kg),
+          cm: parseFloat(cm),
+          tarih: tarih
+        }
+      ])
 
-    if (!error && recordsData) {
-      setRecords(recordsData)
+    if (!error) {
 
-      const hatKayitlari = recordsData.filter(r => r.line === id)
+      const { data } = await supabase
+        .from('records')
+        .select('*')
 
-      if (hatKayitlari.length > 0) {
-        const sorted = [...hatKayitlari].sort(
-          (a, b) => new Date(a.tarih) - new Date(b.tarih)
-        )
+      setRecords(data || [])
 
-        const ilkTarih = new Date(sorted[0].tarih)
-        const bugun = new Date()
-
-        const fark = Math.floor(
-          (bugun - ilkTarih) / (1000 * 60 * 60 * 24)
-        )
-
-        setGecenGun(fark)
-      }
+      setSeciliHat(null)
+      setAra('')
+      setKg('')
+      setCm('')
+      setTarih('')
     }
   }
 
-  checkUser()
-}, [])
+  // 🔥 BLOK SAYFASI
+  if (blokMu) {
+
+    const hatlar = Array.from({ length: 15 }, (_, i) => `${id}${i+1}`)
+
+    return (
+      <div style={{ padding:20 }}>
+
+        <Link href="/" style={homeBtn}>← ANASAYFA</Link>
+
+        <div style={titleBox}>{id} Blok</div>
+
+        <div style={{
+          display:'grid',
+          gridTemplateColumns:'repeat(4,1fr)',
+          gap:10
+        }}>
+
+          {hatlar.map(h => {
+
+            const veri = records.find(r => r.line === h)
+
+            return (
+              <div 
+                key={h}
+                onClick={()=>setSeciliHat(h)}
+                style={{
+                  background:'#e5e7eb',
+                  padding:15,
+                  borderRadius:10,
+                  cursor:'pointer'
+                }}
+              >
+
+                <div style={{fontWeight:'bold'}}>{h}</div>
+
+                <div>🔴 {veri?.cm || 0} cm</div>
+
+                <div style={{display:'flex', gap:5}}>
+
+  {/* DETAY */}
+  <button
+    onClick={(e)=>{
+      e.stopPropagation()
+      router.push(`/hat/${h}`)
+    }}
+    style={{
+      background:'#111',
+      color:'white',
+      padding:'6px 10px',
+      borderRadius:6
+    }}
+  >
+    Detay
+  </button>
+
+  {/* SON KAYIT SİL */}
+  <button
+  onClick={async (e)=>{
+    e.stopPropagation()
+
+    const ok = confirm(`${h} son kayıt silinsin mi?`)
+    if (!ok) return
+
+    const hatKayitlari = records
+      .filter(r => r.line === h)
+      .sort((a,b)=> new Date(b.tarih) - new Date(a.tarih))
+
+    if (hatKayitlari.length === 0) return
+
+    const sonKayit = hatKayitlari[0]
+
+    await supabase
+      .from('records')
+      .delete()
+      .eq('id', sonKayit.id)
+
+    const { data } = await supabase
+      .from('records')
+      .select('*')
+
+    setRecords(data || [])
+  }}
+  style={{
+    background:'#f97316',
+    color:'white',
+    padding:'6px 10px',
+    borderRadius:6
+  }}
+>
+  Son Kayıt Sil
+</button>
+
+  {/* TÜMÜNÜ SİL */}
+  <button
+    onClick={async (e)=>{
+      e.stopPropagation()
+
+      const ok = confirm(`${h} komple silinsin mi?`)
+      if (!ok) return
+
+      await supabase
+        .from('records')
+        .delete()
+        .eq('line', h)
+
+      const { data } = await supabase
+        .from('records')
+        .select('*')
+
+      setRecords(data || [])
+    }}
+    style={{
+      background:'red',
+      color:'white',
+      padding:'6px 10px',
+      borderRadius:6
+    }}
+  >
+    🗑
+  </button>
+
+</div>
+
+              </div>
+            )
+          })}
+
+        </div>
+
+        {/* 🔥 POPUP */}
+        {seciliHat && (
+          <div style={overlay}>
+
+            <div style={popup}>
+
+              <h3>{seciliHat} Ekim</h3>
+
+              <input placeholder="Ara" value={ara} onChange={e=>setAra(e.target.value)} style={input}/>
+              <input placeholder="KG" value={kg} onChange={e=>setKg(e.target.value)} style={input}/>
+              <input placeholder="CM" value={cm} onChange={e=>setCm(e.target.value)} style={input}/>
+              <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} style={input}/>
+
+              <button onClick={kaydet} style={saveBtn}>Kaydet</button>
+
+              <button onClick={()=>setSeciliHat(null)} style={closeBtn}>Kapat</button>
+
+            </div>
+
+          </div>
+        )}
+
+      </div>
+    )
+  }
+
+  // 🔥 DETAY SAYFASI
 
   const hatKayitlari = records.filter(r => r.line === id);
 
@@ -121,93 +308,117 @@ useEffect(() => {
   return (
     <div style={{ padding: 20 }}>
 
-      {/* 🔥 SADECE BURASI DEĞİŞTİ */}
       <Link href="/" style={homeBtn}>← ANASAYFA</Link>
 
-      {/* 🔥 SADECE BURASI DEĞİŞTİ */}
       <div style={titleBox}>{id} Detay</div>
 
-      <h2>
-        <b>Güncel Boy:</b> 
-        <span style={valueBox}>{guncelBoy.toFixed(2)} cm</span>
-      </h2>
-
-      <h2>
-        <b>Toplam Metre:</b> 
-        <span style={valueBox}>{metre} m</span>
-      </h2>
-
-      <h2>
-        <b>İlk Toplam KG:</b> 
-        <span style={valueBox}>{toplamIlkKg.toFixed(2)}</span>
-      </h2>
-
-      <h2>
-        <b>Toplam KG:</b> 
-        <span style={valueBox}>{guncelKg.toFixed(2)}</span>
-      </h2>
-
-      <h3>
-        <b>Geçen Gün:</b> 
-        <span style={valueBox}>{gecenGun} gün</span>
-      </h3>
-
-      <h2>
-        <b>Artış:</b> 
-        <span style={valueBox}>
-          {(guncelKg - toplamIlkKg).toFixed(2)} kg
-        </span>
-      </h2>
+      <h2><b>Güncel Boy:</b> <span style={valueBox}>{guncelBoy.toFixed(2)} cm</span></h2>
+      <h2><b>Toplam Metre:</b> <span style={valueBox}>{metre} m</span></h2>
+      <h2><b>İlk Toplam KG:</b> <span style={valueBox}>{toplamIlkKg.toFixed(2)}</span></h2>
+      <h2><b>Toplam KG:</b> <span style={valueBox}>{guncelKg.toFixed(2)}</span></h2>
+      <h3><b>Geçen Gün:</b> <span style={valueBox}>{gecenGun} gün</span></h3>
+      <h2><b>Artış:</b> <span style={valueBox}>{(guncelKg - toplamIlkKg).toFixed(2)} kg</span></h2>
 
       <h3>{durum}</h3>
-
       {ilkKayit && (
-        <div style={box}>
-          <h3>İlk Ekim</h3>
+  <div style={box}>
+    <h3>İlk Ekim</h3>
 
-          <div>Ara: {ilkKayit.ara}</div>
-          <div>KG (metre): {ilkKayit.kg}</div>
-          <div>İlk Toplam KG: {ilkToplamKg.toFixed(2)}</div>
-          <div>Boy: {ilkKayit.cm} cm</div>
-          <div>
-            Tarih: {new Date(ilkKayit.tarih).toLocaleDateString()}
-          </div>
+    <div>Ara: {ilkKayit.ara}</div>
+    <div>KG (metre): {ilkKayit.kg}</div>
+    <div>İlk Toplam KG: {ilkToplamKg.toFixed(2)}</div>
+    <div>Boy: {ilkKayit.cm} cm</div>
+    <div>
+      Tarih: {new Date(ilkKayit.tarih).toLocaleDateString()}
+    </div>
+  </div>
+)}
+
+{sirali.length > 0 && (
+  <div style={box}>
+    <h3>Ekim Geçmişi</h3>
+
+    {sirali.map((r, i) => {
+
+      const halat = 56;
+      const toplamKg =
+        (parseFloat(r.kg) || 0) *
+        (r.ara || 1) * halat;
+
+      return (
+        <div key={i} style={{ fontSize:14 }}>
+          {new Date(r.tarih).toLocaleDateString()} →
+          {r.kg} kg / {r.cm} cm / Ara: {r.ara}
+          {" "}→ {toplamKg.toFixed(2)} kg
         </div>
-      )}
+      );
+    })}
 
-      {sirali.length > 0 && (
-        <div style={box}>
-          <h3>Ekim Geçmişi</h3>
-
-          {sirali.map((r, i) => {
-
-            const halat = 56;
-            const toplamKg =
-              (parseFloat(r.kg) || 0) *
-              (r.ara || 1) * halat;
-
-            return (
-              <div key={i} style={{ fontSize:14 }}>
-                {new Date(r.tarih).toLocaleDateString()} →
-                {r.kg} kg / {r.cm} cm / Ara: {r.ara}
-                {" "}→ {toplamKg.toFixed(2)} kg
-              </div>
-            );
-          })}
-
-        </div>
-      )}
+  </div>
+)}
 
     </div>
   );
 }
 
-const box = {
-  background: '#f5f5f5',
-  padding: 15,
-  borderRadius: 10,
-  marginTop: 10
-};
+// 🔥 STYLE
+
+const overlay = {
+  position:'fixed',
+  top:0,
+  left:0,
+  width:'100%',
+  height:'100%',
+  background:'rgba(0,0,0,0.4)',
+  display:'flex',
+  justifyContent:'center',
+  alignItems:'center'
+}
+
+const popup = {
+  background:'white',
+  padding:20,
+  borderRadius:10,
+  width:300
+}
+
+const input = {
+  width:'100%',
+  marginBottom:10,
+  padding:8,
+  borderRadius:6,
+  border:'1px solid #ccc'
+}
+
+const saveBtn = {
+  width:'100%',
+  background:'#2563eb',
+  color:'white',
+  padding:10,
+  borderRadius:8,
+  marginBottom:10
+}
+
+const closeBtn = {
+  width:'100%',
+  background:'#ddd',
+  padding:10,
+  borderRadius:8
+}
+
+const detayBtn = {
+  background:'#333',
+  color:'white',
+  padding:'6px 10px',
+  borderRadius:6
+}
+
+const silBtn = {
+  background:'red',
+  color:'white',
+  padding:'6px 10px',
+  borderRadius:6
+}
 
 const valueBox = {
   background:'#0070f3',
@@ -218,7 +429,6 @@ const valueBox = {
   fontWeight:'bold'
 };
 
-/* 🔥 YENİ EKLENEN SADECE 2 STYLE */
 const homeBtn = {
   background:'red',
   color:'white',
@@ -232,6 +442,7 @@ const homeBtn = {
 };
 
 const titleBox = {
+  
   background:'green',
   color:'white',
   padding:'10px',
@@ -239,4 +450,10 @@ const titleBox = {
   fontWeight:'bold',
   borderRadius:10,
   marginBottom:10
+};
+const box = {
+  background: '#f5f5f5',
+  padding: 15,
+  borderRadius: 10,
+  marginTop: 10
 };
