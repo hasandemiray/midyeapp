@@ -35,7 +35,24 @@ export default function HatDetay() {
       const { data: recordsData, error } = await supabase
         .from('records')
         .select('*')
+const hatKayitlari = recordsData
+  .filter(r => r.line === id)
+  .sort((a,b)=> new Date(a.tarih) - new Date(b.tarih))
 
+if (hatKayitlari.length > 0) {
+
+  const ilkTarih = new Date(hatKayitlari[0].tarih)
+  const bugun = new Date()
+
+  bugun.setHours(0,0,0,0)
+  ilkTarih.setHours(0,0,0,0)
+
+  const fark = Math.floor(
+    (bugun - ilkTarih) / (1000 * 60 * 60 * 24)
+  )
+
+  setGecenGun(fark)
+}
       if (!error && recordsData) {
         setRecords(recordsData)
       }
