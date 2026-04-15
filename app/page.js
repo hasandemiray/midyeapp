@@ -41,20 +41,13 @@ export default function Home() {
 
       {/* 🔥 BAŞLIK */}
       <div style={{
-  display:'flex',
-  justifyContent:'center',
-  alignItems:'center',
-  gap:10,
-  margin:'20px 0'
-}}>
-
-  <img src="/midye.png" width={40} />
-
-  <h1 style={{margin:0}}>MİDYE TAKİP SİSTEMİ</h1>
-
-  <img src="/midye.png" width={40} />
-
-</div>
+        textAlign:'center',
+        fontWeight:'bold',
+        fontSize:22,
+        marginBottom:20
+      }}>
+        🐚 MİDYE TAKİP SİSTEMİ 🐚
+      </div>
 
       {/* 🔥 BLOKLAR */}
       <div style={{
@@ -95,6 +88,23 @@ export default function Home() {
           }}
         >
           📊 ANALİZ PANELİ
+        </button>
+      </div>
+
+      {/* 🔥 HASAT DEFTERİ (EKLEDİK) */}
+      <div style={{marginTop:10}}>
+        <button
+          onClick={()=>router.push('/hasat')}
+          style={{
+            width:'100%',
+            background:'linear-gradient(90deg,#16a34a,#22c55e)',
+            color:'white',
+            padding:15,
+            borderRadius:10,
+            fontWeight:'bold'
+          }}
+        >
+          🐚 HASAT DEFTERİ
         </button>
       </div>
 
