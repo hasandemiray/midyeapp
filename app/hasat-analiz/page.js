@@ -11,12 +11,11 @@ export default function HasatAnaliz() {
   const [toplamKg, setToplamKg] = useState(0)
   const [aliciData, setAliciData] = useState({})
   const [aylikToplam, setAylikToplam] = useState(0)
-  const [gecenAyToplam, setGecenAyToplam] = useState(0)
   const [data, setData] = useState([])
 
   const [acikAlici, setAcikAlici] = useState(null)
 
-  // 🔥 TARİH PARSE
+  // 🔥 TARİH PARSE (AYNI)
   const parseTarih = (t) => {
     if (!t) return null
 
@@ -43,9 +42,8 @@ export default function HasatAnaliz() {
     let toplam = 0
     const alicilar = {}
     let aylik = 0
-    let gecenAy = 0
 
-    // 🔥 EN SON KAYIT TARİHİ
+    // 🔥 SON VERİYE GÖRE AY
     const sonKayit = data
       .map(d => parseTarih(d.tarih))
       .filter(Boolean)
@@ -57,13 +55,6 @@ export default function HasatAnaliz() {
       now.getFullYear() +
       '-' +
       String(now.getMonth() + 1).padStart(2, '0')
-
-    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-
-    const lastMonth =
-      lastMonthDate.getFullYear() +
-      '-' +
-      String(lastMonthDate.getMonth() + 1).padStart(2, '0')
 
     data.forEach(d => {
 
@@ -86,16 +77,11 @@ export default function HasatAnaliz() {
         aylik += d.kg || 0
       }
 
-      if (ay === lastMonth) {
-        gecenAy += d.kg || 0
-      }
-
     })
 
     setToplamKg(toplam)
     setAliciData(alicilar)
     setAylikToplam(aylik)
-    setGecenAyToplam(gecenAy)
   }
 
   const enCokAlan = Object.entries(aliciData)
@@ -142,11 +128,6 @@ export default function HasatAnaliz() {
           <b>{aylikToplam} kg</b>
         </div>
 
-        <div style={kartSari}>
-          ⏮️ Geçen Ay <br/>
-          <b>{gecenAyToplam} kg</b>
-        </div>
-
       </div>
 
       {/* LİSTE */}
@@ -190,7 +171,7 @@ export default function HasatAnaliz() {
   )
 }
 
-/* STYLE */
+/* STYLE (AYNI) */
 
 const btnGri = {
   background:'#64748b',
@@ -224,13 +205,6 @@ const kartYesil = {
 
 const kartMavi = {
   background:'linear-gradient(90deg,#2563eb,#3b82f6)',
-  color:'white',
-  padding:15,
-  borderRadius:12
-}
-
-const kartSari = {
-  background:'linear-gradient(90deg,#f59e0b,#fbbf24)',
   color:'white',
   padding:15,
   borderRadius:12
