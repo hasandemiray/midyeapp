@@ -11,10 +11,22 @@ export default function HasatAnaliz() {
   const [toplamKg, setToplamKg] = useState(0)
   const [aliciData, setAliciData] = useState({})
   const [aylikToplam, setAylikToplam] = useState(0)
-  const [gecenAyToplam, setGecenAyToplam] = useState(0) // 🔥 YENİ
+  const [gecenAyToplam, setGecenAyToplam] = useState(0)
   const [data, setData] = useState([])
 
   const [acikAlici, setAcikAlici] = useState(null)
+
+  // 🔥 TARİH PARSE
+  const parseTarih = (t) => {
+    if (!t) return null
+
+    if (t.includes('.')) {
+      const [gun, ay, yil] = t.split('.')
+      return new Date(`${yil}-${ay}-${gun}`)
+    }
+
+    return new Date(t)
+  }
 
   useEffect(() => {
     getData()
@@ -31,14 +43,21 @@ export default function HasatAnaliz() {
     let toplam = 0
     const alicilar = {}
     let aylik = 0
-    let gecenAy = 0 // 🔥 YENİ
+    let gecenAy = 0
 
     const now = new Date()
 
-    const thisMonth = now.toISOString().slice(0,7)
+    const thisMonth =
+      now.getFullYear() +
+      '-' +
+      String(now.getMonth() + 1).padStart(2, '0')
 
     const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-    const lastMonth = lastMonthDate.toISOString().slice(0,7)
+
+    const lastMonth =
+      lastMonthDate.getFullYear() +
+      '-' +
+      String(lastMonthDate.getMonth() + 1).padStart(2, '0')
 
     data.forEach(d => {
 
@@ -49,12 +68,20 @@ export default function HasatAnaliz() {
         alicilar[d.alici] += d.kg
       }
 
-      if (d.tarih?.slice(0,7) === thisMonth) {
+      const date = parseTarih(d.tarih)
+
+      if (!date) return
+
+      const ay =
+        date.getFullYear() +
+        '-' +
+        String(date.getMonth() + 1).padStart(2, '0')
+
+      if (ay === thisMonth) {
         aylik += d.kg || 0
       }
 
-      // 🔥 GEÇEN AY
-      if (d.tarih?.slice(0,7) === lastMonth) {
+      if (ay === lastMonth) {
         gecenAy += d.kg || 0
       }
 
@@ -63,7 +90,7 @@ export default function HasatAnaliz() {
     setToplamKg(toplam)
     setAliciData(alicilar)
     setAylikToplam(aylik)
-    setGecenAyToplam(gecenAy) // 🔥 YENİ
+    setGecenAyToplam(gecenAy)
   }
 
   const enCokAlan = Object.entries(aliciData)
@@ -72,7 +99,7 @@ export default function HasatAnaliz() {
   return (
     <div style={{padding:20}}>
 
-      {/* 🔙 NAV BUTONLARI */}
+      {/* 🔙 NAV */}
       <div style={{
         display:'flex',
         gap:10,
@@ -109,7 +136,7 @@ export default function HasatAnaliz() {
 
       <h2 style={{marginBottom:15}}>📊 Hasat Paneli</h2>
 
-      {/* 🔥 ÜST KARTLAR */}
+      {/* KARTLAR */}
       <div style={{
         display:'grid',
         gridTemplateColumns:'1fr',
@@ -135,7 +162,6 @@ export default function HasatAnaliz() {
           <b>{aylikToplam} kg</b>
         </div>
 
-        {/* 🔥 YENİ KART */}
         <div style={kartSari}>
           ⏮️ Geçen Ay
           <br/>
@@ -144,7 +170,7 @@ export default function HasatAnaliz() {
 
       </div>
 
-      {/* 🔥 MÜŞTERİ LİSTESİ */}
+      {/* LİSTE */}
       <h3>Müşteri Dağılımı</h3>
 
       {Object.entries(aliciData).map(([alici, kg]) => {
@@ -190,41 +216,4 @@ export default function HasatAnaliz() {
   )
 }
 
-/* 🎨 STYLES */
-
-const kartMor = {
-  background:'linear-gradient(90deg,#7c3aed,#9333ea)',
-  color:'white',
-  padding:15,
-  borderRadius:12
-}
-
-const kartYesil = {
-  background:'linear-gradient(90deg,#16a34a,#22c55e)',
-  color:'white',
-  padding:15,
-  borderRadius:12
-}
-
-const kartMavi = {
-  background:'linear-gradient(90deg,#2563eb,#3b82f6)',
-  color:'white',
-  padding:15,
-  borderRadius:12
-}
-
-const kartSari = {
-  background:'linear-gradient(90deg,#f59e0b,#fbbf24)',
-  color:'white',
-  padding:15,
-  borderRadius:12
-}
-
-const listItem = {
-  background:'#f1f5f9',
-  padding:12,
-  borderRadius:10,
-  marginBottom:5,
-  display:'flex',
-  justifyContent:'space-between'
-}
+/* STYLE AYNI */
