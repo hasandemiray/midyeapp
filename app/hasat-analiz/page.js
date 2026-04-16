@@ -45,7 +45,13 @@ export default function HasatAnaliz() {
     let aylik = 0
     let gecenAy = 0
 
-    const now = new Date()
+    // 🔥 EN SON KAYIT TARİHİ
+    const sonKayit = data
+      .map(d => parseTarih(d.tarih))
+      .filter(Boolean)
+      .sort((a,b)=>b-a)[0]
+
+    const now = sonKayit || new Date()
 
     const thisMonth =
       now.getFullYear() +
@@ -69,7 +75,6 @@ export default function HasatAnaliz() {
       }
 
       const date = parseTarih(d.tarih)
-
       if (!date) return
 
       const ay =
@@ -99,36 +104,14 @@ export default function HasatAnaliz() {
   return (
     <div style={{padding:20}}>
 
-      {/* 🔙 NAV */}
-      <div style={{
-        display:'flex',
-        gap:10,
-        marginBottom:15
-      }}>
+      {/* NAV */}
+      <div style={{display:'flex', gap:10, marginBottom:15}}>
 
-        <button
-          onClick={()=>router.back()}
-          style={{
-            background:'#64748b',
-            color:'white',
-            padding:'8px 12px',
-            borderRadius:8,
-            border:'none'
-          }}
-        >
+        <button onClick={()=>router.back()} style={btnGri}>
           ← Geri
         </button>
 
-        <button
-          onClick={()=>router.push('/')}
-          style={{
-            background:'#16a34a',
-            color:'white',
-            padding:'8px 12px',
-            borderRadius:8,
-            border:'none'
-          }}
-        >
+        <button onClick={()=>router.push('/')} style={btnYesil}>
           🏠 Anasayfa
         </button>
 
@@ -145,26 +128,22 @@ export default function HasatAnaliz() {
       }}>
 
         <div style={kartMor}>
-          📦 Toplam Satış
-          <br/>
+          📦 Toplam Satış <br/>
           <b>{toplamKg} kg</b>
         </div>
 
         <div style={kartYesil}>
-          👑 En iyi müşteri
-          <br/>
+          👑 En iyi müşteri <br/>
           <b>{enCokAlan?.[0]} ({enCokAlan?.[1]} kg)</b>
         </div>
 
         <div style={kartMavi}>
-          📅 Bu Ay
-          <br/>
+          📅 Bu Ay <br/>
           <b>{aylikToplam} kg</b>
         </div>
 
         <div style={kartSari}>
-          ⏮️ Geçen Ay
-          <br/>
+          ⏮️ Geçen Ay <br/>
           <b>{gecenAyToplam} kg</b>
         </div>
 
@@ -182,10 +161,7 @@ export default function HasatAnaliz() {
 
             <div 
               onClick={()=>setAcikAlici(acikAlici === alici ? null : alici)}
-              style={{
-                ...listItem,
-                cursor:'pointer'
-              }}
+              style={{...listItem, cursor:'pointer'}}
             >
               {alici}
               <span>{kg} kg</span>
@@ -198,13 +174,11 @@ export default function HasatAnaliz() {
                 borderRadius:10,
                 marginTop:5
               }}>
-
                 {detay.map(d => (
-                  <div key={d.id} style={{marginBottom:5}}>
+                  <div key={d.id}>
                     📅 {d.tarih} → {d.kg} kg
                   </div>
                 ))}
-
               </div>
             )}
 
@@ -216,4 +190,57 @@ export default function HasatAnaliz() {
   )
 }
 
-/* STYLE AYNI */
+/* STYLE */
+
+const btnGri = {
+  background:'#64748b',
+  color:'white',
+  padding:'8px 12px',
+  borderRadius:8,
+  border:'none'
+}
+
+const btnYesil = {
+  background:'#16a34a',
+  color:'white',
+  padding:'8px 12px',
+  borderRadius:8,
+  border:'none'
+}
+
+const kartMor = {
+  background:'linear-gradient(90deg,#7c3aed,#9333ea)',
+  color:'white',
+  padding:15,
+  borderRadius:12
+}
+
+const kartYesil = {
+  background:'linear-gradient(90deg,#16a34a,#22c55e)',
+  color:'white',
+  padding:15,
+  borderRadius:12
+}
+
+const kartMavi = {
+  background:'linear-gradient(90deg,#2563eb,#3b82f6)',
+  color:'white',
+  padding:15,
+  borderRadius:12
+}
+
+const kartSari = {
+  background:'linear-gradient(90deg,#f59e0b,#fbbf24)',
+  color:'white',
+  padding:15,
+  borderRadius:12
+}
+
+const listItem = {
+  background:'#f1f5f9',
+  padding:12,
+  borderRadius:10,
+  marginBottom:5,
+  display:'flex',
+  justifyContent:'space-between'
+}
