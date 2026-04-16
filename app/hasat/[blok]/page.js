@@ -18,45 +18,56 @@ export default function Blok() {
   const [tarih, setTarih] = useState('')
   const [alici, setAlici] = useState('')
 
-  // 🔥 TARİH FORMAT (GÖRÜNÜM)
-  const formatTarih = (t) => {
-    if (!t) return ''
+  // 🔥 SAFE PARSE
+  const parseTarih = (t) => {
+    try {
+      if (!t) return null
 
-    if (t.includes('.')) return t
+      if (t.includes('.')) {
+        const [g, m, y] = t.split('.')
+        return new Date(`${y}-${m}-${g}`)
+      }
 
-    const date = new Date(t)
-
-    const gun = String(date.getDate()).padStart(2, '0')
-    const ay = String(date.getMonth() + 1).padStart(2, '0')
-    const yil = date.getFullYear()
-
-    return `${gun}.${ay}.${yil}`
+      return new Date(t)
+    } catch {
+      return null
+    }
   }
 
-  // 🔥 TARİH PARSE (SIRALAMA İÇİN)
-  const parseTarih = (t) => {
-    if (!t) return 0
+  // 🔥 FORMAT
+  const formatTarih = (t) => {
+    const d = parseTarih(t)
+    if (!d || isNaN(d)) return t
 
-    if (t.includes('.')) {
-      const [g, m, y] = t.split('.')
-      return new Date(`${y}-${m}-${g}`)
-    }
+    const gun = String(d.getDate()).padStart(2, '0')
+    const ay = String(d.getMonth() + 1).padStart(2, '0')
+    const yil = d.getFullYear()
 
-    return new Date(t)
+    return `${gun}.${ay}.${yil}`
   }
 
   const getData = async () => {
     if (!seciliHat) return
 
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('hasat')
       .select('*')
       .eq('hat', seciliHat)
 
-    // 🔥 BURASI DÜZELTİLDİ
-    const sorted = (data || []).sort((a,b)=> 
-      parseTarih(b.tarih) - parseTarih(a.tarih)
-    )
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    const sorted = (data || []).sort((a,b)=> {
+      const da = parseTarih(a.tarih)
+      const db = parseTarih(b.tarih)
+
+      if (!da) return 1
+      if (!db) return -1
+
+      return db - da
+    })
 
     setData(sorted)
   }
@@ -103,36 +114,14 @@ export default function Blok() {
   return (
     <div style={{padding:20, maxWidth:600, margin:'auto'}}>
 
-      {/* 🔙 ÜST BUTONLAR */}
-      <div style={{
-        display:'flex',
-        gap:10,
-        marginBottom:15
-      }}>
+      {/* NAV */}
+      <div style={{display:'flex', gap:10, marginBottom:15}}>
 
-        <button
-          onClick={()=>router.back()}
-          style={{
-            background:'#64748b',
-            color:'white',
-            padding:'8px 12px',
-            borderRadius:8,
-            border:'none'
-          }}
-        >
+        <button onClick={()=>router.back()} style={btnGri}>
           ← Geri
         </button>
 
-        <button
-          onClick={()=>router.push('/')}
-          style={{
-            background:'#16a34a',
-            color:'white',
-            padding:'8px 12px',
-            borderRadius:8,
-            border:'none'
-          }}
-        >
+        <button onClick={()=>router.push('/')} style={btnYesil}>
           🏠 Anasayfa
         </button>
 
@@ -207,9 +196,7 @@ export default function Blok() {
               </div>
 
               {d.alici && (
-                <div>
-                  👤 {d.alici}
-                </div>
+                <div>👤 {d.alici}</div>
               )}
 
               <button onClick={()=>sil(d.id)} style={deleteBtn}>
@@ -226,4 +213,60 @@ export default function Blok() {
   )
 }
 
-/* STYLE (AYNI KALSIN) */
+/* STYLE */
+
+const btnGri = {
+  background:'#64748b',
+  color:'white',
+  padding:'8px 12px',
+  borderRadius:8,
+  border:'none'
+}
+
+const btnYesil = {
+  background:'#16a34a',
+  color:'white',
+  padding:'8px 12px',
+  borderRadius:8,
+  border:'none'
+}
+
+const formBox = {
+  background:'#fff',
+  padding:15,
+  borderRadius:12,
+  marginBottom:20,
+  display:'flex',
+  flexDirection:'column',
+  gap:10
+}
+
+const input = {
+  padding:10,
+  borderRadius:8,
+  border:'1px solid #ccc'
+}
+
+const saveBtn = {
+  background:'#16a34a',
+  color:'white',
+  padding:12,
+  borderRadius:10,
+  border:'none'
+}
+
+const card = {
+  background:'#f9fafb',
+  padding:12,
+  borderRadius:10,
+  marginBottom:10
+}
+
+const deleteBtn = {
+  marginTop:5,
+  background:'#ef4444',
+  color:'white',
+  padding:'5px 10px',
+  borderRadius:8,
+  border:'none'
+}
