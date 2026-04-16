@@ -106,11 +106,14 @@ if (hatKayitlari.length > 0) {
 
         <div style={titleBox}>{id} Blok</div>
 
-        <div style={{
-          display:'grid',
-          gridTemplateColumns:'repeat(4,1fr)',
-          gap:10
-        }}>
+        <div
+  className="hat-grid"
+  style={{
+    display:'grid',
+    gridTemplateColumns:'repeat(4,1fr)',
+    gap:10
+  }}
+>
 
           {hatlar.map(h => {
 
