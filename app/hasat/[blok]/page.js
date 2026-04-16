@@ -18,7 +18,7 @@ export default function Blok() {
   const [tarih, setTarih] = useState('')
   const [alici, setAlici] = useState('')
 
-  // 🔥 TARİH FORMAT (SADECE GÖRÜNÜM)
+  // 🔥 TARİH FORMAT (GÖRÜNÜM)
   const formatTarih = (t) => {
     if (!t) return ''
 
@@ -33,6 +33,18 @@ export default function Blok() {
     return `${gun}.${ay}.${yil}`
   }
 
+  // 🔥 TARİH PARSE (SIRALAMA İÇİN)
+  const parseTarih = (t) => {
+    if (!t) return 0
+
+    if (t.includes('.')) {
+      const [g, m, y] = t.split('.')
+      return new Date(`${y}-${m}-${g}`)
+    }
+
+    return new Date(t)
+  }
+
   const getData = async () => {
     if (!seciliHat) return
 
@@ -40,9 +52,13 @@ export default function Blok() {
       .from('hasat')
       .select('*')
       .eq('hat', seciliHat)
-      .order('tarih', { ascending: false })
 
-    setData(data || [])
+    // 🔥 BURASI DÜZELTİLDİ
+    const sorted = (data || []).sort((a,b)=> 
+      parseTarih(b.tarih) - parseTarih(a.tarih)
+    )
+
+    setData(sorted)
   }
 
   useEffect(() => {
@@ -183,7 +199,7 @@ export default function Blok() {
             <div key={d.id} style={card}>
 
               <div style={{fontWeight:'bold'}}>
-                📅 {formatTarih(d.tarih)} {/* 🔥 DÜZELTİLDİ */}
+                📅 {formatTarih(d.tarih)}
               </div>
 
               <div>
@@ -202,9 +218,12 @@ export default function Blok() {
 
             </div>
           ))}
+
         </div>
       )}
 
     </div>
   )
 }
+
+/* STYLE (AYNI KALSIN) */
