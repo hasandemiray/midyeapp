@@ -52,7 +52,7 @@ export default function Blok() {
     const { data, error } = await supabase
       .from('hasat')
       .select('*')
-      .eq('hat', seciliHat)
+      .eq('hat', seciliHat.toUpperCase()) // 🔥 FIX
 
     if (error) {
       console.error(error)
@@ -78,7 +78,7 @@ export default function Blok() {
 
   useEffect(() => {
     if (blok) {
-      setSeciliHat(`${blok}1`)
+      setSeciliHat(`${blok.toUpperCase()}1`) // 🔥 FIX
     }
   }, [blok])
 
@@ -88,11 +88,11 @@ export default function Blok() {
 
     await supabase.from('hasat').insert([
       {
-        hat: seciliHat,
+        hat: seciliHat.toUpperCase(), // 🔥 FIX
         kg: Number(kg),
         cuval: Number(cuval),
         tarih,
-        alici
+        alici: alici.toLowerCase().trim() // 🔥 FIX
       }
     ])
 
@@ -127,7 +127,7 @@ export default function Blok() {
 
       </div>
 
-      <h2 style={{marginBottom:15}}>📊 {blok} Blok</h2>
+      <h2 style={{marginBottom:15}}>📊 {blok.toUpperCase()} Blok</h2>
 
       {/* HATLAR */}
       <div style={{
@@ -137,7 +137,7 @@ export default function Blok() {
         marginBottom:20
       }}>
         {[...Array(15)].map((_,i)=>{
-          const hat = `${blok}${i+1}`
+          const hat = `${blok.toUpperCase()}${i+1}`
 
           return (
             <button
@@ -213,7 +213,7 @@ export default function Blok() {
   )
 }
 
-/* STYLE */
+/* STYLE aynı */
 
 const btnGri = {
   background:'#64748b',

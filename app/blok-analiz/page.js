@@ -8,8 +8,6 @@ export default function BlokAnaliz() {
 
   const router = useRouter()
 
-  const [data, setData] = useState([])
-
   const [bloklar, setBloklar] = useState({})
   const [hatlar, setHatlar] = useState({})
 
@@ -23,28 +21,26 @@ export default function BlokAnaliz() {
       .from('hasat')
       .select('*')
 
-    setData(data || [])
-
     const blokMap = {}
     const hatMap = {}
 
-    data.forEach(d => {
+    ;(data || []).forEach(d => {
 
       const kg = d.kg || 0
 
-      // 🔥 HAT
-      if (d.hat) {
-        if (!hatMap[d.hat]) hatMap[d.hat] = 0
-        hatMap[d.hat] += kg
-      }
+      if (!d.hat) return
 
-      // 🔥 BLOK (A1 → A)
-      if (d.hat) {
-        const blok = d.hat.charAt(0)
+      // 🔥 HAT NORMALİZE
+      const hat = d.hat.toUpperCase().trim()
 
-        if (!blokMap[blok]) blokMap[blok] = 0
-        blokMap[blok] += kg
-      }
+      if (!hatMap[hat]) hatMap[hat] = 0
+      hatMap[hat] += kg
+
+      // 🔥 BLOK NORMALİZE
+      const blok = hat.charAt(0)
+
+      if (!blokMap[blok]) blokMap[blok] = 0
+      blokMap[blok] += kg
 
     })
 
@@ -61,7 +57,6 @@ export default function BlokAnaliz() {
   return (
     <div style={{padding:20}}>
 
-      {/* NAV */}
       <div style={{display:'flex', gap:10, marginBottom:15}}>
         <button onClick={()=>router.back()} style={btnGri}>← Geri</button>
         <button onClick={()=>router.push('/')} style={btnYesil}>🏠 Anasayfa</button>
@@ -69,7 +64,6 @@ export default function BlokAnaliz() {
 
       <h2>📊 Blok & Hat Analiz</h2>
 
-      {/* ÖZET */}
       <div style={{marginTop:15}}>
 
         <div style={kartMor}>
@@ -84,7 +78,6 @@ export default function BlokAnaliz() {
 
       </div>
 
-      {/* BLOKLAR */}
       <h3 style={{marginTop:20}}>📦 Bloklar</h3>
 
       {Object.entries(bloklar)
@@ -96,12 +89,10 @@ export default function BlokAnaliz() {
           </div>
       ))}
 
-      {/* HATLAR */}
       <h3 style={{marginTop:20}}>🔗 Hatlar</h3>
 
       {Object.entries(hatlar)
         .sort((a,b)=>b[1]-a[1])
-        .slice(0,15)
         .map(([hat, kg]) => (
           <div key={hat} style={listItem}>
             {hat}
