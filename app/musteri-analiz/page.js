@@ -18,7 +18,6 @@ export default function MusteriAnaliz() {
   const [sonAlim, setSonAlim] = useState('')
   const [durum, setDurum] = useState('')
 
-  // 🔥 TARİH ÇÖZÜCÜ
   const parseTarih = (t) => {
     if (!t) return null
 
@@ -99,6 +98,7 @@ export default function MusteriAnaliz() {
   return (
     <div style={{padding:20}}>
 
+      {/* NAV */}
       <div style={{display:'flex', gap:10, marginBottom:15}}>
         <button onClick={()=>router.back()} style={btnGri}>← Geri</button>
         <button onClick={()=>router.push('/')} style={btnYesil}>🏠 Anasayfa</button>
@@ -106,6 +106,7 @@ export default function MusteriAnaliz() {
 
       <h2>👤 Müşteri Analiz</h2>
 
+      {/* SELECT */}
       <select
         value={secili}
         onChange={e=>setSecili(e.target.value)}
@@ -117,6 +118,7 @@ export default function MusteriAnaliz() {
         ))}
       </select>
 
+      {/* SONUÇ */}
       {secili && (
         <div style={{marginTop:20}}>
 
@@ -145,6 +147,9 @@ export default function MusteriAnaliz() {
     </div>
   )
 }
+
+/* 🎨 STYLE */
+
 const btnGri = {
   background:'#64748b',
   color:'white',
@@ -160,4 +165,35 @@ const btnYesil = {
   borderRadius:8,
   border:'none'
 }
-/* STYLE aynı bıraktım */
+
+const select = {
+  width:'100%',
+  padding:10,
+  borderRadius:10,
+  border:'1px solid #ccc',
+  marginTop:10
+}
+
+const kart = {
+  background:'linear-gradient(90deg,#0ea5e9,#0284c7)',
+  color:'white',
+  padding:15,
+  borderRadius:12,
+  marginBottom:10
+}
+
+const miniKart = {
+  background:'#f1f5f9',
+  padding:10,
+  borderRadius:10,
+  marginTop:8
+}
+
+const listItem = {
+  background:'#f1f5f9',
+  padding:12,
+  borderRadius:10,
+  marginTop:8,
+  display:'flex',
+  justifyContent:'space-between'
+}
