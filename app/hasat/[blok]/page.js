@@ -1,12 +1,14 @@
 'use client'
 
 import { useParams } from 'next/navigation'
+import { useRouter } from 'next/navigation'
 import { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 
 export default function Blok() {
 
   const { blok } = useParams()
+  const router = useRouter()
 
   const [seciliHat, setSeciliHat] = useState(null)
   const [data, setData] = useState([])
@@ -48,14 +50,14 @@ export default function Blok() {
         kg: Number(kg),
         cuval: Number(cuval),
         tarih,
-        alici // ✅ EKLENDİ
+        alici
       }
     ])
 
     setKg('')
     setCuval('')
     setTarih('')
-    setAlici('') // ✅ EKLENDİ
+    setAlici('')
 
     getData()
   }
@@ -69,6 +71,41 @@ export default function Blok() {
 
   return (
     <div style={{padding:20, maxWidth:600, margin:'auto'}}>
+
+      {/* 🔙 ÜST BUTONLAR */}
+      <div style={{
+        display:'flex',
+        gap:10,
+        marginBottom:15
+      }}>
+
+        <button
+          onClick={()=>router.back()}
+          style={{
+            background:'#64748b',
+            color:'white',
+            padding:'8px 12px',
+            borderRadius:8,
+            border:'none'
+          }}
+        >
+          ← Geri
+        </button>
+
+        <button
+          onClick={()=>router.push('/')}
+          style={{
+            background:'#16a34a',
+            color:'white',
+            padding:'8px 12px',
+            borderRadius:8,
+            border:'none'
+          }}
+        >
+          🏠 Anasayfa
+        </button>
+
+      </div>
 
       <h2 style={{marginBottom:15}}>📊 {blok} Blok</h2>
 
@@ -110,14 +147,7 @@ export default function Blok() {
           <input placeholder="KG" value={kg} onChange={e=>setKg(e.target.value)} style={input}/>
           <input placeholder="Çuval" value={cuval} onChange={e=>setCuval(e.target.value)} style={input}/>
           <input type="date" value={tarih} onChange={e=>setTarih(e.target.value)} style={input}/>
-
-          {/* ✅ YENİ ALAN */}
-          <input 
-            placeholder="Alıcı" 
-            value={alici} 
-            onChange={e=>setAlici(e.target.value)} 
-            style={input}
-          />
+          <input placeholder="Alıcı" value={alici} onChange={e=>setAlici(e.target.value)} style={input}/>
 
           <button onClick={kaydet} style={saveBtn}>
             Kaydet
@@ -145,10 +175,11 @@ export default function Blok() {
                 ⚖️ {d.kg} kg / {d.cuval} çuval
               </div>
 
-              {/* ✅ ALICI GÖSTER */}
-              <div>
-                👤 {d.alici || 'Belirtilmemiş'}
-              </div>
+              {d.alici && (
+                <div>
+                  👤 {d.alici}
+                </div>
+              )}
 
               <button onClick={()=>sil(d.id)} style={deleteBtn}>
                 Sil
