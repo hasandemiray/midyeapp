@@ -31,6 +31,7 @@ export default function Hasat() {
 
       <h2 style={{marginBottom:15}}>📊 Hasat - Blok Seç</h2>
 
+      {/* BLOKLAR */}
       <div style={{
         display:'grid',
         gridTemplateColumns:'repeat(3,1fr)',
@@ -56,7 +57,7 @@ export default function Hasat() {
 
       </div>
 
-      {/* 🔥 ANALİZ BUTONU */}
+      {/* 🔥 ANALİZ BUTONLARI */}
       <div style={{marginTop:15}}>
         <button
           onClick={()=>router.push('/hasat-analiz')}
@@ -72,21 +73,40 @@ export default function Hasat() {
           📊 HASAT ANALİZ PANELİ
         </button>
       </div>
-<div style={{marginTop:10}}>
-  <button
-    onClick={()=>router.push('/musteri-analiz')}
-    style={{
-      width:'100%',
-      background:'linear-gradient(90deg,#9333ea,#7c3aed)',
-      color:'white',
-      padding:15,
-      borderRadius:10,
-      fontWeight:'bold'
-    }}
-  >
-    👤 MÜŞTERİ ANALİZ PANELİ
-  </button>
-</div>
+
+      <div style={{marginTop:10}}>
+        <button
+          onClick={()=>router.push('/musteri-analiz')}
+          style={{
+            width:'100%',
+            background:'linear-gradient(90deg,#9333ea,#7c3aed)',
+            color:'white',
+            padding:15,
+            borderRadius:10,
+            fontWeight:'bold'
+          }}
+        >
+          👤 MÜŞTERİ ANALİZ PANELİ
+        </button>
+      </div>
+
+      {/* 🔥 YENİ EKLEDİĞİM */}
+      <div style={{marginTop:10}}>
+        <button
+          onClick={()=>router.push('/blok-analiz')}
+          style={{
+            width:'100%',
+            background:'linear-gradient(90deg,#f59e0b,#fbbf24)',
+            color:'white',
+            padding:15,
+            borderRadius:10,
+            fontWeight:'bold'
+          }}
+        >
+          📊 BLOK & HAT ANALİZ
+        </button>
+      </div>
+
     </div>
   )
 }
