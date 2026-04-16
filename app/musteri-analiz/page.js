@@ -145,5 +145,19 @@ export default function MusteriAnaliz() {
     </div>
   )
 }
+const btnGri = {
+  background:'#64748b',
+  color:'white',
+  padding:'8px 12px',
+  borderRadius:8,
+  border:'none'
+}
 
+const btnYesil = {
+  background:'#16a34a',
+  color:'white',
+  padding:'8px 12px',
+  borderRadius:8,
+  border:'none'
+}
 /* STYLE aynı bıraktım */
