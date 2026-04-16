@@ -36,6 +36,23 @@ export default function Hasat() {
 
       </div>
 
+      {/* 🔥 YENİ BUTON */}
+      <div style={{marginTop:15}}>
+        <button
+          onClick={()=>router.push('/hasat-analiz')}
+          style={{
+            width:'100%',
+            background:'linear-gradient(90deg,#0ea5e9,#0284c7)',
+            color:'white',
+            padding:15,
+            borderRadius:10,
+            fontWeight:'bold'
+          }}
+        >
+          📊 HASAT ANALİZ PANELİ
+        </button>
+      </div>
+
     </div>
   )
 }
