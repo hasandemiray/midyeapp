@@ -49,8 +49,9 @@ export default function Home() {
   <img src="/midye.png" width={40} />
 
   <div style={{
+    
     fontWeight:'bold',
-    fontSize:22
+    fontSize:18
   }}>
     MİDYE TAKİP SİSTEMİ
   </div>
