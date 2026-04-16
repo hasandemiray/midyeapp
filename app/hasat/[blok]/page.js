@@ -18,6 +18,21 @@ export default function Blok() {
   const [tarih, setTarih] = useState('')
   const [alici, setAlici] = useState('')
 
+  // 🔥 TARİH FORMAT (SADECE GÖRÜNÜM)
+  const formatTarih = (t) => {
+    if (!t) return ''
+
+    if (t.includes('.')) return t
+
+    const date = new Date(t)
+
+    const gun = String(date.getDate()).padStart(2, '0')
+    const ay = String(date.getMonth() + 1).padStart(2, '0')
+    const yil = date.getFullYear()
+
+    return `${gun}.${ay}.${yil}`
+  }
+
   const getData = async () => {
     if (!seciliHat) return
 
@@ -168,7 +183,7 @@ export default function Blok() {
             <div key={d.id} style={card}>
 
               <div style={{fontWeight:'bold'}}>
-                📅 {d.tarih}
+                📅 {formatTarih(d.tarih)} {/* 🔥 DÜZELTİLDİ */}
               </div>
 
               <div>
@@ -192,48 +207,4 @@ export default function Blok() {
 
     </div>
   )
-}
-
-/* 🎨 STYLE */
-
-const formBox = {
-  background:'#fff',
-  padding:15,
-  borderRadius:12,
-  marginBottom:20,
-  display:'flex',
-  flexDirection:'column',
-  gap:10,
-  boxShadow:'0 0 10px rgba(0,0,0,0.1)'
-}
-
-const input = {
-  padding:10,
-  borderRadius:8,
-  border:'1px solid #ccc'
-}
-
-const saveBtn = {
-  background:'#16a34a',
-  color:'white',
-  padding:12,
-  borderRadius:10,
-  border:'none',
-  fontWeight:'bold'
-}
-
-const card = {
-  background:'#f9fafb',
-  padding:12,
-  borderRadius:10,
-  marginBottom:10
-}
-
-const deleteBtn = {
-  marginTop:5,
-  background:'#ef4444',
-  color:'white',
-  padding:'5px 10px',
-  borderRadius:8,
-  border:'none'
 }
