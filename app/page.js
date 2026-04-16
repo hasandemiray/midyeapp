@@ -36,18 +36,31 @@ export default function Home() {
         }}>
           Çıkış
         </button>
+        </div>
 
-      </div>
-
-      {/* 🔥 BAŞLIK */}
       <div style={{
-        textAlign:'center',
-        fontWeight:'bold',
-        fontSize:22,
-        marginBottom:20
-      }}>
-        🐚 MİDYE TAKİP SİSTEMİ 🐚
-      </div>
+  display:'flex',
+  justifyContent:'center',
+  alignItems:'center',
+  gap:10,
+  marginBottom:20
+}}>
+
+  <img src="/midye.png" width={40} />
+
+  <div style={{
+    fontWeight:'bold',
+    fontSize:22
+  }}>
+    MİDYE TAKİP SİSTEMİ
+  </div>
+
+  <img 
+  src="/midye.png" 
+  width={40} 
+  style={{transform:'scaleX(-1)'}} 
+/>
+</div>
 
       {/* 🔥 BLOKLAR */}
       <div style={{
