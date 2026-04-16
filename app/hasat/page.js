@@ -9,6 +9,26 @@ export default function Hasat() {
   return (
     <div style={{padding:20}}>
 
+      {/* 🔙 ÜST BAR */}
+      <div style={{
+        display:'flex',
+        gap:10,
+        marginBottom:15
+      }}>
+        <button
+          onClick={()=>router.push('/')}
+          style={{
+            background:'#ef4444',
+            color:'white',
+            padding:'8px 12px',
+            borderRadius:8,
+            border:'none'
+          }}
+        >
+          ← Anasayfa
+        </button>
+      </div>
+
       <h2 style={{marginBottom:15}}>📊 Hasat - Blok Seç</h2>
 
       <div style={{
@@ -36,7 +56,7 @@ export default function Hasat() {
 
       </div>
 
-      {/* 🔥 YENİ BUTON */}
+      {/* 🔥 ANALİZ BUTONU */}
       <div style={{marginTop:15}}>
         <button
           onClick={()=>router.push('/hasat-analiz')}
