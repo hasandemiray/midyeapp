@@ -102,7 +102,33 @@ if (hatKayitlari.length > 0) {
     return (
       <div style={{ padding:20 }}>
 
-        <Link href="/" style={homeBtn}>← ANASAYFA</Link>
+        <div style={{display:'flex', gap:10, marginBottom:10}}>
+
+  <button 
+    onClick={() => {
+      if (window.history.length > 1) {
+        router.back()
+      } else {
+        router.push('/')
+      }
+    }}
+    style={{
+      background:'#334155',
+      color:'white',
+      padding:'10px 15px',
+      borderRadius:10,
+      border:'none',
+      cursor:'pointer'
+    }}
+  >
+    ← Geri
+  </button>
+
+  <Link href="/" style={homeBtn}>
+    🏠 Anasayfa
+  </Link>
+
+</div>
 
         <div style={titleBox}>{id} Blok</div>
 
@@ -328,7 +354,33 @@ if (hatKayitlari.length > 0) {
   return (
     <div style={{ padding: 20 }}>
 
-      <Link href="/" style={homeBtn}>← ANASAYFA</Link>
+      <div style={{display:'flex', gap:10, marginBottom:10}}>
+
+  <button 
+    onClick={() => {
+      if (window.history.length > 1) {
+        router.back()
+      } else {
+        router.push('/')
+      }
+    }}
+    style={{
+      background:'#334155',
+      color:'white',
+      padding:'10px 15px',
+      borderRadius:10,
+      border:'none',
+      cursor:'pointer'
+    }}
+  >
+    ← Geri
+  </button>
+
+  <Link href="/" style={homeBtn}>
+    🏠 Anasayfa
+  </Link>
+
+</div>
 
       <div style={titleBox}>{id} Detay</div>
 

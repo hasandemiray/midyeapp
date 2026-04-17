@@ -14,6 +14,9 @@ export default function Analiz() {
   const [hasatKg, setHasatKg] = useState(0)
   const [aktifBlok, setAktifBlok] = useState(null)
 
+  const [hasatHatlar, setHasatHatlar] = useState([])
+  const [showHasat, setShowHasat] = useState(false)
+
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.from('records').select('*')
@@ -30,6 +33,7 @@ export default function Analiz() {
     let blokData = {}
     let hasatCount = 0
     let hasatToplamKg = 0
+    let hasatList = []
 
     const hatlar = {}
 
@@ -90,6 +94,12 @@ export default function Analiz() {
       if (enBuyukBoy >= 6) {
         hasatCount++
         hasatToplamKg += guncelKg
+
+        hasatList.push({
+          line,
+          kg: guncelKg,
+          boy: enBuyukBoy
+        })
       }
 
     })
@@ -98,6 +108,7 @@ export default function Analiz() {
     setBloklar(blokData)
     setHasatHatSayisi(hasatCount)
     setHasatKg(hasatToplamKg)
+    setHasatHatlar(hasatList)
 
   }, [records])
 
@@ -127,7 +138,10 @@ export default function Analiz() {
           <h2>{toplamKg.toFixed(0)} kg</h2>
         </div>
 
-        <div style={cardGreen}>
+        <div 
+          style={{...cardGreen, cursor:'pointer'}}
+          onClick={() => setShowHasat(!showHasat)}
+        >
           <div>🟢 Hasatlık Hat</div>
           <h2>{hasatHatSayisi}</h2>
         </div>
@@ -138,6 +152,39 @@ export default function Analiz() {
         </div>
 
       </div>
+
+      {/* HASAT LİSTESİ */}
+      {showHasat && (
+        <div style={{
+          marginTop:20,
+          background:'#1e293b',
+          padding:20,
+          borderRadius:15
+        }}>
+
+          <h3>🟢 Hasatlık Hatlar</h3>
+
+          {hasatHatlar.map(h => (
+            <div 
+              key={h.line}
+              onClick={() => router.push(`/hat/${h.line}`)}
+              style={{
+                padding:10,
+                marginBottom:10,
+                borderRadius:10,
+                background:'#14532d',
+                border:'1px solid #22c55e',
+                cursor:'pointer'
+              }}
+            >
+              <b>{h.line}</b>
+              <div>🐚 {h.kg.toFixed(0)} kg</div>
+              <div>📏 {h.boy.toFixed(2)} cm</div>
+            </div>
+          ))}
+
+        </div>
+      )}
 
       <h3 style={{marginTop:30}}>Blok Dağılımı</h3>
 
@@ -173,6 +220,7 @@ export default function Analiz() {
         )
       })}
 
+      {/* BLOK DETAY GERİ GELDİ */}
       {aktifBlok && (
         <div style={{
           marginTop:30,
@@ -234,16 +282,20 @@ export default function Analiz() {
             })
 
             return (
-              <div key={line} style={{
-                marginBottom:10,
-                padding:10,
-                background: guncelBoy >= 6 ? '#14532d' : '#334155',
-                borderRadius:10,
-                border: guncelBoy >= 6 ? '1px solid #22c55e' : 'none'
-              }}>
+              <div 
+                key={line} 
+                onClick={() => router.push(`/hat/${line}`)}
+                style={{
+                  marginBottom:10,
+                  padding:10,
+                  background: guncelBoy >= 6 ? '#14532d' : '#334155',
+                  borderRadius:10,
+                  border: guncelBoy >= 6 ? '1px solid #22c55e' : 'none',
+                  cursor:'pointer'
+                }}
+              >
 
-                {/* 🔥 SADECE BURASI EKLENDİ */}
-                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center'}}>
+                <div style={{display:'flex', justifyContent:'space-between'}}>
                   <b>{line}</b>
 
                   {guncelBoy >= 6 && (
@@ -263,9 +315,9 @@ export default function Analiz() {
                 <div>📅 {new Date(tarih).toLocaleDateString()}</div>
                 <div>🐚 {guncelKg.toFixed(0)} kg</div>
                 <div>📏 {guncelBoy.toFixed(2)} cm</div>
+
               </div>
             )
-
           })}
 
         </div>
