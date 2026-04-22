@@ -18,6 +18,9 @@ export default function MusteriAnaliz() {
   const [sonAlim, setSonAlim] = useState('')
   const [durum, setDurum] = useState('')
 
+  const [ortalamaGun, setOrtalamaGun] = useState('')
+  const [son3, setSon3] = useState([])
+
   const parseTarih = (t) => {
     if (!t) return null
 
@@ -74,6 +77,7 @@ export default function MusteriAnaliz() {
     setToplam(toplamKg)
     setAylik(aylikMap)
 
+    // 🔥 SON ALIM + DURUM
     if (filtre[0]) {
       const lastDate = parseTarih(filtre[0].tarih)
       const diffDays = Math.floor((new Date() - lastDate) / (1000*60*60*24))
@@ -81,24 +85,56 @@ export default function MusteriAnaliz() {
       
       if (diffDays <= 7) setDurum('🟢 Aktif')
       else if (diffDays <= 30) setDurum('🟡 Yavaşladı')
-      else setDurum('🔴 Pasif')
+      else setDurum('🔴 Risk')
     }
 
-    const aylar = Object.entries(aylikMap)
-      .sort((a,b)=>b[0].localeCompare(a[0]))
+    // 🔥 ORTALAMA ALIM ARALIĞI
+    if (filtre.length > 1) {
+      let toplamGun = 0
 
-    if (aylar.length >= 2) {
-      if (aylar[0][1] > aylar[1][1]) setTrend('📈 Artıyor')
-      else if (aylar[0][1] < aylar[1][1]) setTrend('📉 Düşüyor')
-      else setTrend('➖ Sabit')
+      for (let i = 0; i < filtre.length - 1; i++) {
+        const d1 = parseTarih(filtre[i].tarih)
+        const d2 = parseTarih(filtre[i+1].tarih)
+
+        const fark = Math.abs((d1 - d2) / (1000*60*60*24))
+        toplamGun += fark
+      }
+
+      const ort = (toplamGun / (filtre.length - 1)).toFixed(1)
+      setOrtalamaGun(`${ort} gün`)
+    } else {
+      setOrtalamaGun('-')
     }
+
+    // 🔥 SON 3 ALIM
+    setSon3(filtre.slice(0,3))
+
+    // 🔥 TREND (GELİŞMİŞ)
+const aylar = Object.entries(aylikMap)
+  .sort((a,b)=>b[0].localeCompare(a[0]))
+
+if (aylar.length >= 2) {
+  if (aylar[0][1] > aylar[1][1]) setTrend('📈 Artıyor (aylık)')
+  else if (aylar[0][1] < aylar[1][1]) setTrend('📉 Düşüyor (aylık)')
+  else setTrend('➖ Sabit')
+}
+else if (filtre.length >= 2) {
+  const son = filtre[0].kg || 0
+  const onceki = filtre[1].kg || 0
+
+  if (son > onceki) setTrend('📈 Artıyor (son alım)')
+  else if (son < onceki) setTrend('📉 Düşüyor (son alım)')
+  else setTrend('➖ Sabit')
+}
+else {
+  setTrend('➖ Veri yetersiz')
+}
 
   }, [secili])
 
   return (
     <div style={{padding:20}}>
 
-      {/* NAV */}
       <div style={{display:'flex', gap:10, marginBottom:15}}>
         <button onClick={()=>router.back()} style={btnGri}>← Geri</button>
         <button onClick={()=>router.push('/')} style={btnYesil}>🏠 Anasayfa</button>
@@ -106,7 +142,6 @@ export default function MusteriAnaliz() {
 
       <h2>👤 Müşteri Analiz</h2>
 
-      {/* SELECT */}
       <select
         value={secili}
         onChange={e=>setSecili(e.target.value)}
@@ -118,7 +153,6 @@ export default function MusteriAnaliz() {
         ))}
       </select>
 
-      {/* SONUÇ */}
       {secili && (
         <div style={{marginTop:20}}>
 
@@ -129,7 +163,18 @@ export default function MusteriAnaliz() {
           <div style={miniKart}>📊 Trend: {trend}</div>
           <div style={miniKart}>⏱️ Son Alım: {sonAlim}</div>
           <div style={miniKart}>📍 Durum: {durum}</div>
+          <div style={miniKart}>📆 Ortalama Alım: {ortalamaGun}</div>
 
+          {/* 🔥 SON 3 ALIM */}
+          <h3 style={{marginTop:20}}>📦 Son 3 Alım</h3>
+          {son3.map((s,i)=>(
+            <div key={i} style={listItem}>
+              {s.tarih}
+              <span>{s.kg} kg</span>
+            </div>
+          ))}
+
+          {/* 🔥 AYLIK */}
           <h3 style={{marginTop:20}}>📅 Aylık</h3>
 
           {Object.entries(aylik)
@@ -148,7 +193,7 @@ export default function MusteriAnaliz() {
   )
 }
 
-/* 🎨 STYLE */
+/* 🎨 STYLE aynı */
 
 const btnGri = {
   background:'#64748b',
