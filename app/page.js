@@ -1,11 +1,25 @@
 'use client'
 
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from './lib/supabase'
 
 export default function Home() {
 
   const router = useRouter()
+
+  // ✅ LOGIN KONTROLÜ EKLENDİ
+  useEffect(() => {
+    const kontrol = async () => {
+      const { data } = await supabase.auth.getSession()
+
+      if (!data.session) {
+        router.push('/login')
+      }
+    }
+
+    kontrol()
+  }, [])
 
   const cikisYap = async () => {
     await supabase.auth.signOut()
@@ -36,32 +50,31 @@ export default function Home() {
         }}>
           Çıkış
         </button>
-        </div>
+      </div>
 
       <div style={{
-  display:'flex',
-  justifyContent:'center',
-  alignItems:'center',
-  gap:10,
-  marginBottom:20
-}}>
+        display:'flex',
+        justifyContent:'center',
+        alignItems:'center',
+        gap:10,
+        marginBottom:20
+      }}>
 
-  <img src="/midye.png" width={40} />
+        <img src="/midye.png" width={40} />
 
-  <div style={{
-    
-    fontWeight:'bold',
-    fontSize:18
-  }}>
-    MİDYE TAKİP SİSTEMİ
-  </div>
+        <div style={{
+          fontWeight:'bold',
+          fontSize:18
+        }}>
+          MİDYE TAKİP SİSTEMİ
+        </div>
 
-  <img 
-  src="/midye.png" 
-  width={40} 
-  style={{transform:'scaleX(-1)'}} 
-/>
-</div>
+        <img 
+          src="/midye.png" 
+          width={40} 
+          style={{transform:'scaleX(-1)'}} 
+        />
+      </div>
 
       {/* 🔥 BLOKLAR */}
       <div style={{
@@ -105,7 +118,7 @@ export default function Home() {
         </button>
       </div>
 
-      {/* 🔥 HASAT DEFTERİ (EKLEDİK) */}
+      {/* 🔥 HASAT DEFTERİ */}
       <div style={{marginTop:10}}>
         <button
           onClick={()=>router.push('/hasat')}

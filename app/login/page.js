@@ -1,13 +1,27 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useRouter } from 'next/navigation'
 
 export default function Login() {
+
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const router = useRouter()
+
+  // ✅ GİRİŞ VARSA OTOMATİK ANASAYFA
+  useEffect(() => {
+    const kontrol = async () => {
+      const { data } = await supabase.auth.getSession()
+
+      if (data.session) {
+        router.push('/')
+      }
+    }
+
+    kontrol()
+  }, [])
 
   const handleLogin = async () => {
     if (username !== 'akana') {
