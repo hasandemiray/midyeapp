@@ -61,12 +61,41 @@ export default function Login() {
         gap: 15
       }}>
 
-        <h2 style={{
-          textAlign: 'center',
+        {/* 🔥 LOGO + BAŞLIK */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 10,
           marginBottom: 10
         }}>
-          🦪 Midye Panel
-        </h2>
+          {/* SOL MIDYE */}
+          <img 
+            src="/midye.png" 
+            style={{ 
+              width: 32,
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+            }} 
+          />
+
+          {/* YAZI */}
+          <h2 style={{
+            margin: 0,
+            fontWeight: 'bold'
+          }}>
+            Midye Panel
+          </h2>
+
+          {/* SAĞ MIDYE (TERS) */}
+          <img 
+            src="/midye.png" 
+            style={{ 
+              width: 32,
+              transform: 'scaleX(-1)',
+              filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))'
+            }} 
+          />
+        </div>
 
         <input
           placeholder="Kullanıcı Adı"
