@@ -12,7 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: 'MidyePro 🦪',
+  title: 'MidyePro ',
   description: 'Midye çiftliği yönetim ve takip sistemi',
 };
 
