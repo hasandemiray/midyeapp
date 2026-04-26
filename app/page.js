@@ -1,25 +1,36 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { supabase } from './lib/supabase'
 
 export default function Home() {
 
   const router = useRouter()
+  const [loading, setLoading] = useState(true) // ✅ EKLENDİ
 
-  // ✅ LOGIN KONTROLÜ EKLENDİ
   useEffect(() => {
     const kontrol = async () => {
       const { data } = await supabase.auth.getSession()
 
       if (!data.session) {
         router.push('/login')
+      } else {
+        setLoading(false) // ✅ EKLENDİ
       }
     }
 
     kontrol()
   }, [])
+
+  // ✅ BURASI EN KRİTİK
+  if (loading) {
+    return (
+      <div style={{padding:20}}>
+        Yükleniyor...
+      </div>
+    )
+  }
 
   const cikisYap = async () => {
     await supabase.auth.signOut()
