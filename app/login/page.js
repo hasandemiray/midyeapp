@@ -18,7 +18,7 @@
   <h2 style={{
     margin: 0,
     fontWeight: 'bold',
-    fontSize: 26,
+    fontSize: 30,
     letterSpacing: 1
   }}>
     Midye Panel
@@ -28,7 +28,7 @@
   <img 
     src="/midye.png" 
     style={{ 
-      width: 50,
+      width: 60,
       transform: 'scaleX(-1)',
       filter: 'drop-shadow(0 3px 6px rgba(0,0,0,0.25))'
     }} 
